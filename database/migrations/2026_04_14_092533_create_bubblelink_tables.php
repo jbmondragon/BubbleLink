@@ -17,12 +17,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('contact_number', 20)->nullable();
-            $table->enum('role', ['customer', 'owner'])->default('customer');
-            $table->rememberToken();
-            $table->timestamps();
+            $table->string('contact_number')->nullable();
+            $table->timestamp('created_at')->useCurrent();
         });
 
         /*
@@ -32,17 +29,13 @@ return new class extends Migration
         */
         Schema::create('shops', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')
-                ->constrained('users')
-                ->onDelete('cascade');
-
             $table->string('shop_name');
+            $table->string('email')->unique();
+            $table->string('password');
             $table->string('address');
-            $table->string('contact_number', 20)->nullable();
+            $table->string('contact_number')->nullable();
             $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true);
-
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
         });
 
         /*
@@ -52,15 +45,17 @@ return new class extends Migration
         */
         Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('shop_id')
-                ->constrained('shops')
-                ->onDelete('cascade');
+            $table->string('name')->unique();
+        });
 
-            $table->string('service_name');
-            $table->decimal('price_per_kg', 10, 2);
-            $table->text('description')->nullable();
-
-            $table->timestamps();
+        Schema::create('shop_services', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('shop_id');
+            $table->unsignedBigInteger('service_id');
+            $table->decimal('price', 10, 2);
+            $table->unique(['shop_id', 'service_id']);
+            $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
+            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
         });
 
         /*
@@ -70,38 +65,23 @@ return new class extends Migration
         */
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('customer_id')
-                ->constrained('users')
-                ->onDelete('cascade');
-
-            $table->foreignId('shop_id')
-                ->constrained('shops')
-                ->onDelete('cascade');
-
-            $table->foreignId('service_id')
-                ->constrained('services')
-                ->onDelete('cascade');
-
+            $table->unsignedBigInteger('customer_id');
+            $table->unsignedBigInteger('shop_id');
+            $table->unsignedBigInteger('service_id');
+            $table->enum('service_mode', ['pickup_only', 'delivery_only', 'both']);
             $table->string('pickup_address')->nullable();
             $table->string('delivery_address')->nullable();
-
-            $table->decimal('weight', 6, 2);
+            $table->timestamp('pickup_datetime')->nullable();
+            $table->timestamp('delivery_datetime')->nullable();
             $table->decimal('total_price', 10, 2);
+            $table->enum('status', ['pending', 'accepted', 'awaiting_dropoff', 'rejected', 'in_progress', 'completed']);
+            $table->timestamp('created_at')->useCurrent();
+            $table->enum('payment_method', ['gcash', 'cash']);
+            $table->enum('payment_status', ['paid', 'unpaid']);
 
-            $table->enum('status', [
-                'pending',
-                'accepted',
-                'rejected',
-                'in_progress',
-                'completed',
-                'cancelled'
-            ])->default('pending');
-
-            $table->dateTime('pickup_schedule')->nullable();
-            $table->dateTime('delivery_schedule')->nullable();
-
-            $table->timestamps();
+            $table->foreign('customer_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
+            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
         });
 
         /*
@@ -167,13 +147,10 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('reviews');
-        Schema::dropIfExists('order_status_histories');
         Schema::dropIfExists('orders');
+        Schema::dropIfExists('shop_services');
         Schema::dropIfExists('services');
         Schema::dropIfExists('shops');
-        Schema::dropIfExists('sessions');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('users');
     }
 };

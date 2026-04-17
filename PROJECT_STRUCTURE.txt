@@ -1,0 +1,69 @@
+# Laravel Project Directory Guide
+
+This guide explains where to place different types of files in your Laravel project (bubblelink):
+
+- **app/**
+  - `Models/` — Eloquent models (database tables)
+  - `Http/Controllers/` — Controller classes (handle HTTP requests)
+  - `Console/Commands/` — Custom Artisan commands
+  - `Providers/` — Service providers
+
+- **bootstrap/**
+  - Application bootstrapping and configuration
+
+- **config/**
+  - Configuration files (database, mail, etc.)
+
+- **database/**
+  - `migrations/` — Database schema migrations
+  - `factories/` — Model factories for testing/seeding
+  - `seeders/` — Database seeders
+
+- **public/**
+  - Entry point (`index.php`)
+  - Public assets (images, compiled JS/CSS, robots.txt)
+
+- **resources/**
+  - `views/` — Blade templates (HTML)
+  - `js/` — JavaScript source files
+  - `css/` — CSS source files
+
+- **routes/**
+  - Route definitions (`web.php`, `console.php`)
+
+- **storage/**
+  - Logs, compiled views, file uploads, cache
+
+- **tests/**
+  - Unit and feature tests
+
+- **vendor/**
+  - Composer dependencies (do not edit manually)
+
+- **Root files**
+  - `composer.json` — PHP dependencies
+  - `package.json` — Node.js dependencies
+  - `vite.config.js` — Frontend build config
+  - `README.md` — Project documentation
+
+---
+
+**Summary Table**
+
+| File Type      | Directory                |
+|----------------|--------------------------|
+| Database       | database/                |
+| Migrations     | database/migrations/     |
+| Seeders        | database/seeders/        |
+| Models         | app/Models/              |
+| Controllers    | app/Http/Controllers/    |
+| Blade (HTML)   | resources/views/         |
+| JS             | resources/js/            |
+| CSS            | resources/css/           |
+| Public Assets  | public/                  |
+| Config         | config/                  |
+| Routes         | routes/                  |
+| Tests          | tests/                   |
+| Vendor         | vendor/                  |
+
+For more details, see the Laravel documentation: https://laravel.com/docs/12.x/structure

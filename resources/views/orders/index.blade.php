@@ -4,7 +4,7 @@
             <div>
                 <div class="text-sm font-semibold uppercase tracking-wide text-slate-500">Management</div>
                 <h1 class="text-3xl font-bold">Orders</h1>
-                <p class="mt-2 text-sm text-slate-600">Review customer orders by shop and update status or payment state.</p>
+                <p class="mt-2 text-sm text-slate-600">Review customer orders for your assigned shop and update status or payment state.</p>
             </div>
             <a href="{{ route('dashboard') }}" class="text-sm font-medium text-blue-600 hover:underline">Back to Dashboard</a>
         </div>

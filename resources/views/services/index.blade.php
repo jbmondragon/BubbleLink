@@ -4,7 +4,7 @@
             <div>
                 <div class="text-sm font-semibold uppercase tracking-wide text-slate-500">Management</div>
                 <h1 class="text-3xl font-bold">Services & Pricing</h1>
-                <p class="mt-2 text-sm text-slate-600">Manage service types and assign pricing across your organization shops.</p>
+                <p class="mt-2 text-sm text-slate-600">Manage service types and pricing for your assigned shop.</p>
             </div>
             <a href="{{ route('dashboard') }}" class="text-sm font-medium text-blue-600 hover:underline">Back to Dashboard</a>
         </div>

@@ -2,76 +2,82 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Service;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class ServiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request): View|RedirectResponse
     {
-        $services = \App\Models\Service::all();
-        return view('services.index', compact('services'));
-    }
+        $organization = $this->currentOrganization($request);
+        $membership = $this->currentMembership($request);
+        $currentRole = $this->currentRole($request);
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('services.create');
-    }
+        if (! $organization) {
+            return redirect()
+                ->route('organizations.create')
+                ->with('warning', 'Create your organization first to manage services.');
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|unique:services,name',
+        if ($currentRole !== 'manager') {
+            return redirect()
+                ->route('dashboard')
+                ->with('warning', 'Only managers can manage services. Owners can manage shops and member roles from the dashboard.');
+        }
+
+        $shops = $organization->shops()
+            ->whereKey($membership?->shop_id ?? 0)
+            ->with('shopServices.service')
+            ->get();
+
+        return view('services.index', [
+            'organization' => $organization,
+            'currentMembership' => $membership,
+            'currentRole' => $currentRole,
+            'shops' => $shops,
+            'services' => $organization->services()->orderBy('name')->get(),
         ]);
-        \App\Models\Service::create($validated);
-        return redirect()->route('services.index');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function store(Request $request): RedirectResponse
     {
-        //
-    }
+        $organization = $this->currentOrganization($request);
+        $membership = $this->currentMembership($request);
+        $currentRole = $this->currentRole($request);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $service = \App\Models\Service::findOrFail($id);
-        return view('services.edit', compact('service'));
-    }
+        if (! $organization) {
+            return redirect()
+                ->route('organizations.create')
+                ->with('warning', 'Create your organization first to manage services.');
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $service = \App\Models\Service::findOrFail($id);
-        $validated = $request->validate([
-            'name' => 'required|unique:services,name,' . $service->id,
+        if ($currentRole !== 'manager') {
+            return redirect()
+                ->route('dashboard')
+                ->with('warning', 'Only managers can manage services. Owners can manage shops and member roles from the dashboard.');
+        }
+
+        abort_unless($membership?->shop_id, 403);
+
+        $validated = $request->validateWithBag('serviceCreate', [
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('services', 'name')->where(
+                    fn ($query) => $query->where('organization_id', $organization->id)
+                ),
+            ],
         ]);
-        $service->update($validated);
-        return redirect()->route('services.index');
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $service = \App\Models\Service::findOrFail($id);
-        $service->delete();
-        return redirect()->route('services.index');
+        Service::create([
+            ...$validated,
+            'organization_id' => $organization->id,
+        ]);
+
+        return redirect()->route('services.index')->with('success', 'Service created!');
     }
 }

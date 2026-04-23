@@ -12,18 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('shops', function (Blueprint $table) {
-            $table->bigIncrements('id'); // auto increment
-            $table->unsignedBigInteger('user_id')->index(); // Shop manager (FK, not auto-increment)
+            $table->increments('id');
+            $table->unsignedInteger('organization_id');
             $table->string('shop_name');
-            $table->string('email')->unique();
-            $table->string('password');
             $table->string('address');
             $table->string('contact_number')->nullable();
             $table->string('description')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
+            $table->timestamp('created_at')->nullable();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('organization_id')->references('id')->on('organizations')->cascadeOnDelete();
         });
     }
 

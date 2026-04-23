@@ -2,80 +2,55 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Service;
+use App\Models\Shop;
+use App\Models\ShopService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ShopServiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function store(Request $request): RedirectResponse
     {
-        $shop_services = \App\Models\ShopService::all();
-        return view('shop_services.index', compact('shop_services'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('shop_services.create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
+        $validated = $request->validateWithBag('shopServiceCreate', [
             'shop_id' => 'required|exists:shops,id',
-            'service_id' => 'required|exists:services,id',
-            'price' => 'required|numeric',
+            'service_id' => [
+                'required',
+                Rule::unique('shop_services')->where(fn ($query) => $query->where('shop_id', $request->integer('shop_id'))),
+            ],
+            'price' => 'required|numeric|min:0',
         ]);
-        \App\Models\ShopService::create($validated);
-        return redirect()->route('shop_services.index');
+
+        $shop = Shop::findOrFail($validated['shop_id']);
+        $this->ensureShopRole($request, $shop, ['manager']);
+
+        $serviceExistsForOrganization = Service::query()
+            ->whereKey($validated['service_id'])
+            ->where('organization_id', $shop->organization_id)
+            ->exists();
+
+        if (! $serviceExistsForOrganization) {
+            return back()
+                ->withErrors([
+                    'service_id' => 'Select a service from your organization.',
+                ], 'shopServiceCreate')
+                ->withInput();
+        }
+
+        ShopService::create($validated);
+
+        return redirect()->route('services.index')->with('success', 'Service assigned to shop!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function destroy(Request $request, ShopService $shopService): RedirectResponse
     {
-        //
-    }
+        $shopService->loadMissing('shop');
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $shop_service = \App\Models\ShopService::findOrFail($id);
-        return view('shop_services.edit', compact('shop_service'));
-    }
+        $this->ensureShopRole($request, $shopService->shop, ['manager']);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $shop_service = \App\Models\ShopService::findOrFail($id);
-        $validated = $request->validate([
-            'shop_id' => 'required|exists:shops,id',
-            'service_id' => 'required|exists:services,id',
-            'price' => 'required|numeric',
-        ]);
-        $shop_service->update($validated);
-        return redirect()->route('shop_services.index');
-    }
+        $shopService->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $shop_service = \App\Models\ShopService::findOrFail($id);
-        $shop_service->delete();
-        return redirect()->route('shop_services.index');
+        return redirect()->route('services.index')->with('success', 'Shop service removed!');
     }
 }

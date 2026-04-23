@@ -2,88 +2,100 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Shop;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ShopController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function show(Request $request, Shop $shop): View
     {
-        $shops = \App\Models\Shop::all();
-        return view('shops.index', compact('shops'));
+        $this->ensureShopRole($request, $shop, ['owner', 'manager', 'staff']);
+        $currentRole = $this->currentRole($request);
+
+        $shop->load([
+            'organization',
+            'shopServices.service',
+            'orders.customer',
+            'orders.shopService.service',
+        ]);
+
+        $orders = $shop->orders->sortByDesc('id')->values();
+
+        return view('shops.show', [
+            'shop' => $shop,
+            'organization' => $shop->organization,
+            'currentRole' => $currentRole,
+            'serviceCount' => $shop->shopServices->count(),
+            'orderCount' => $orders->count(),
+            'completedOrderCount' => $orders->where('status', 'completed')->count(),
+            'totalRevenue' => $orders->sum('total_price'),
+            'unpaidBalance' => $orders->where('payment_status', 'unpaid')->sum('total_price'),
+            'recentOrders' => $orders->take(5),
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function create(Request $request): View
     {
-        return view('shops.create');
+        $organization = $this->currentOrganization($request);
+        $currentRole = $this->currentRole($request);
+
+        if (! $organization) {
+            return view('shops.create', ['organization' => null]);
+        }
+
+        abort_unless($currentRole === 'owner', 403);
+
+        return view('shops.create', ['organization' => $organization]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'shop_name' => 'required',
-            'email' => 'required|email|unique:shops,email',
-            'password' => 'required',
-            'address' => 'required',
-            'contact_number' => 'nullable',
-            'description' => 'nullable',
+            'organization_id' => 'required|exists:organizations,id',
+            'shop_name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'contact_number' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:255',
         ]);
-        $validated['password'] = bcrypt($validated['password']);
-        \App\Models\Shop::create($validated);
-        return redirect()->route('shops.index');
+
+        $this->ensureOrganizationRole($request, (int) $validated['organization_id'], ['owner']);
+
+        Shop::create($validated);
+
+        return redirect()->route('dashboard')->with('success', 'Shop created!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Request $request, Shop $shop): View
     {
-        //
+        $this->ensureShopRole($request, $shop, ['owner']);
+
+        return view('shops.edit', ['shop' => $shop]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Shop $shop): RedirectResponse
     {
-        $shop = \App\Models\Shop::findOrFail($id);
-        return view('shops.edit', compact('shop'));
-    }
+        $this->ensureShopRole($request, $shop, ['owner']);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $shop = \App\Models\Shop::findOrFail($id);
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'shop_name' => 'required',
-            'email' => 'required|email|unique:shops,email,' . $shop->id,
-            'address' => 'required',
-            'contact_number' => 'nullable',
-            'description' => 'nullable',
+            'shop_name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'contact_number' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:255',
         ]);
+
         $shop->update($validated);
-        return redirect()->route('shops.index');
+
+        return redirect()->route('dashboard')->with('success', 'Shop updated!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Request $request, Shop $shop): RedirectResponse
     {
-        $shop = \App\Models\Shop::findOrFail($id);
+        $this->ensureShopRole($request, $shop, ['owner']);
+
         $shop->delete();
-        return redirect()->route('shops.index');
+
+        return redirect()->route('dashboard')->with('success', 'Shop deleted!');
     }
 }

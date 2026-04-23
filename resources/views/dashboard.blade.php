@@ -44,23 +44,19 @@
         <!-- Dashboard Overview -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
             <div class="bg-white shadow rounded-lg p-6 flex flex-col items-center">
-                <div class="text-4xl">📦</div>
-                <div class="text-lg font-semibold mt-2">Total Orders</div>
+                <div class="text-lg font-semibold">Total Orders</div>
                 <div class="text-2xl mt-1">{{ $totalOrders ?? 0 }}</div>
             </div>
             <div class="bg-white shadow rounded-lg p-6 flex flex-col items-center">
-                <div class="text-4xl">💰</div>
-                <div class="text-lg font-semibold mt-2">Total Revenue</div>
+                <div class="text-lg font-semibold">Total Revenue</div>
                 <div class="text-2xl mt-1">₱{{ number_format($totalRevenue ?? 0, 2) }}</div>
             </div>
             <div class="bg-white shadow rounded-lg p-6 flex flex-col items-center">
-                <div class="text-4xl">🏪</div>
-                <div class="text-lg font-semibold mt-2">Number of Shops</div>
+                <div class="text-lg font-semibold">Number of Shops</div>
                 <div class="text-2xl mt-1">{{ $shopCount ?? 0 }}</div>
             </div>
             <div class="bg-white shadow rounded-lg p-6 flex flex-col items-center">
-                <div class="text-4xl">👥</div>
-                <div class="text-lg font-semibold mt-2">Members</div>
+                <div class="text-lg font-semibold">Members</div>
                 <div class="text-2xl mt-1">{{ $memberCount ?? 0 }}</div>
             </div>
         </div>

@@ -2,9 +2,18 @@
 
 namespace App\Providers;
 
+use App\Models\Membership;
+use App\Models\Order;
+use App\Models\Shop;
+use App\Models\ShopService;
+use App\Policies\MembershipPolicy;
+use App\Policies\OrderPolicy;
+use App\Policies\ShopPolicy;
+use App\Policies\ShopServicePolicy;
 use Illuminate\Http\Request;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +30,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(Request $request): void
     {
+        Gate::policy(Shop::class, ShopPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
+        Gate::policy(Membership::class, MembershipPolicy::class);
+        Gate::policy(ShopService::class, ShopServicePolicy::class);
+
         if ($request->header('x-forwarded-proto') === 'https') {
             URL::forceScheme('https');
         }

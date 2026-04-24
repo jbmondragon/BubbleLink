@@ -2,9 +2,9 @@
     <div class="py-10">
         <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <div class="app-hero overflow-hidden rounded-3xl px-8 py-10 text-white">
-                <p class="text-sm font-semibold uppercase tracking-[0.3em] text-orange-100">Admin Workspace</p>
+                <p class="text-sm font-semibold uppercase tracking-[0.3em] text-orange-100">Shop Owner Workspace</p>
                 <h1 class="mt-3 text-4xl font-semibold leading-tight">Set up your organization before you manage shops and orders.</h1>
-                <p class="mt-4 max-w-2xl text-sm text-orange-50/90">This onboarding page is for new admin accounts with no organization yet. Create your organization first, then you will land on the dashboard and unlock the full management tools.</p>
+                <p class="mt-4 max-w-2xl text-sm text-orange-50/90">This onboarding page is for new shop owner accounts with no organization yet. Create your organization first, then you will land on the dashboard and unlock the full management tools.</p>
             </div>
 
             @if (session('warning'))
@@ -29,16 +29,13 @@
                         <a href="{{ route('organizations.create', ['guided' => 1]) }}" class="inline-flex items-center rounded-full bg-teal-900 px-5 py-3 text-sm font-semibold text-orange-50 transition hover:bg-teal-800">
                             Create organization
                         </a>
-                        <a href="{{ route('customer.shops.index') }}" class="inline-flex items-center rounded-full border border-orange-200 bg-white/80 px-5 py-3 text-sm font-semibold text-teal-900 transition hover:border-orange-300 hover:text-teal-950">
-                            Browse public catalog
-                        </a>
                     </div>
                 </section>
 
                 <aside class="space-y-6">
                     <section class="app-panel rounded-3xl p-8">
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-orange-600">Onboarding Checklist</p>
-                        <h2 class="mt-3 text-2xl font-semibold text-slate-900">Launch your admin workspace in three steps</h2>
+                        <h2 class="mt-3 text-2xl font-semibold text-slate-900">Launch your shop owner workspace in three steps</h2>
                         <div class="mt-6 space-y-4">
                             <article class="rounded-2xl border border-orange-200 bg-orange-50 p-4">
                                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">Step 1</p>

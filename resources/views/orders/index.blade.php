@@ -171,6 +171,7 @@
                         <option value="pickup_only" @selected(old('service_mode') === 'pickup_only')>Pickup Only</option>
                         <option value="delivery_only" @selected(old('service_mode') === 'delivery_only')>Delivery Only</option>
                         <option value="both" @selected(old('service_mode') === 'both')>Pickup and Delivery</option>
+                        <option value="walk_in" @selected(old('service_mode') === 'walk_in')>Walk-in Drop-off and Pick-up</option>
                     </select>
                     <x-input-error :messages="$orderCreateErrors->get('service_mode')" class="mt-2" />
                 </div>
@@ -239,6 +240,7 @@
                                     <th class="px-4 py-3 text-left font-medium text-slate-500">Customer</th>
                                     <th class="px-4 py-3 text-left font-medium text-slate-500">Service</th>
                                     <th class="px-4 py-3 text-left font-medium text-slate-500">Mode</th>
+                                    <th class="px-4 py-3 text-left font-medium text-slate-500">Weight</th>
                                     <th class="px-4 py-3 text-left font-medium text-slate-500">Amount</th>
                                     <th class="px-4 py-3 text-left font-medium text-slate-500">Status</th>
                                     <th class="px-4 py-3 text-left font-medium text-slate-500">Payment</th>
@@ -257,6 +259,12 @@
                                         </td>
                                         <td class="px-4 py-3">{{ $order->shopService?->service?->name ?? 'Unassigned service' }}</td>
                                         <td class="px-4 py-3">{{ str($order->service_mode ?? 'n/a')->replace('_', ' ')->title() }}</td>
+                                        <td class="px-4 py-3">
+                                            <div class="flex flex-col gap-2">
+                                                <input name="weight" form="order-update-{{ $order->id }}" type="number" step="0.01" min="0" value="{{ $failedOrderId == $order->id ? old('weight', $order->weight) : $order->weight }}" class="w-28 rounded-md border-gray-300 shadow-sm text-sm">
+                                                <x-input-error :messages="$orderErrors->get('weight')" class="mt-0" />
+                                            </div>
+                                        </td>
                                         <td class="px-4 py-3">₱{{ number_format((float) $order->total_price, 2) }}</td>
                                         <td class="px-4 py-3">
                                             <select name="status" form="order-update-{{ $order->id }}" class="rounded-md border-gray-300 shadow-sm text-sm">
@@ -293,7 +301,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="px-4 py-4 text-gray-400">No orders for this shop yet.</td>
+                                        <td colspan="9" class="px-4 py-4 text-gray-400">No orders for this shop yet.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

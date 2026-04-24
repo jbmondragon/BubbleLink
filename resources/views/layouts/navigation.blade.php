@@ -3,7 +3,8 @@
     $organizationMemberships = auth()->check()
         ? auth()->user()->memberships()->with(['organization', 'shop'])->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 when 'staff' then 3 else 4 end")->get()
         : collect();
-    $isCustomer = $isAuthenticated && $organizationMemberships->isEmpty();
+    $isPlatformAdmin = $isAuthenticated && auth()->user()->is_platform_admin;
+    $isCustomer = $isAuthenticated && ! $isPlatformAdmin && $organizationMemberships->isEmpty();
 
     $activeOrganizationId = session('current_organization_id');
 
@@ -28,30 +29,30 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('customer.shops.index')" :active="request()->routeIs('customer.shops.*') || request()->routeIs('customer.orders.create')">
-                        {{ __('Browse Shops') }}
-                    </x-nav-link>
+                    @if (! $isPlatformAdmin && ! $isCustomer)
+                        <x-nav-link :href="route('customer.shops.index')" :active="request()->routeIs('customer.shops.*') || request()->routeIs('customer.orders.create')">
+                            {{ __('Browse Shops') }}
+                        </x-nav-link>
+                    @endif
 
-                    @if ($organizationMemberships->isNotEmpty())
+                    @if ($isPlatformAdmin)
+                        <x-nav-link :href="route('platform-admin.owner-registrations.index')" :active="request()->routeIs('platform-admin.owner-registrations.*') || request()->routeIs('dashboard')">
+                            {{ __('Owner Approvals') }}
+                        </x-nav-link>
+                    @elseif ($organizationMemberships->isNotEmpty())
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard') || request()->routeIs('services.*') || request()->routeIs('orders.*') || request()->routeIs('memberships.*') || request()->routeIs('shops.*') || request()->routeIs('organizations.*')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
                     @endif
 
-                    @if ($isCustomer)
-                        <x-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.index') || request()->routeIs('customer.orders.show')">
-                            {{ __('My Orders') }}
-                        </x-nav-link>
-                    @endif
                 </div>
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6 sm:gap-4">
                 @guest
-                    <a href="{{ route('customer.login') }}" class="text-sm font-medium text-teal-800 hover:text-teal-950">Customer Login</a>
-                    <a href="{{ route('customer.register') }}" class="text-sm font-medium text-teal-800 hover:text-teal-950">Customer Register</a>
-                    <a href="{{ route('admin.login') }}" class="text-sm font-medium text-teal-800 hover:text-teal-950">Admin Login</a>
-                    <a href="{{ route('admin.register') }}" class="inline-flex items-center rounded-full border border-transparent bg-teal-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-50 transition hover:bg-teal-800">Admin Register</a>
+                    <a href="{{ route('customer.login') }}" class="inline-flex items-center rounded-full border border-teal-900/15 bg-white px-4 py-2 text-sm font-medium text-teal-900 transition hover:border-teal-900 hover:bg-teal-900 hover:text-amber-50">Customer Login</a>
+                    <a href="{{ route('admin.login') }}" class="inline-flex items-center rounded-full border border-teal-900/15 bg-white px-4 py-2 text-sm font-medium text-teal-900 transition hover:border-teal-900 hover:bg-teal-900 hover:text-amber-50">Shop Owner Login</a>
+                    <a href="{{ route('platform-admin.login') }}" class="inline-flex items-center rounded-full border border-teal-900/15 bg-white px-4 py-2 text-sm font-medium text-teal-900 transition hover:border-teal-900 hover:bg-teal-900 hover:text-amber-50">Admin Login</a>
                 @endguest
 
                 @if ($organizationMemberships->count() > 1)
@@ -96,7 +97,11 @@
                                 {{ __('Profile') }}
                             </x-dropdown-link>
 
-                            @if ($isCustomer)
+                            @if ($isPlatformAdmin)
+                                <x-dropdown-link :href="route('platform-admin.owner-registrations.index')">
+                                    {{ __('Owner Approvals') }}
+                                </x-dropdown-link>
+                            @elseif ($isCustomer)
                                 <x-dropdown-link :href="route('customer.orders.index')">
                                     {{ __('My Orders') }}
                                 </x-dropdown-link>
@@ -131,21 +136,22 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('customer.shops.index')" :active="request()->routeIs('customer.shops.*') || request()->routeIs('customer.orders.create')">
-                {{ __('Browse Shops') }}
-            </x-responsive-nav-link>
+            @if (! $isPlatformAdmin && ! $isCustomer)
+                <x-responsive-nav-link :href="route('customer.shops.index')" :active="request()->routeIs('customer.shops.*') || request()->routeIs('customer.orders.create')">
+                    {{ __('Browse Shops') }}
+                </x-responsive-nav-link>
+            @endif
 
-            @if ($organizationMemberships->isNotEmpty())
+            @if ($isPlatformAdmin)
+                <x-responsive-nav-link :href="route('platform-admin.owner-registrations.index')" :active="request()->routeIs('platform-admin.owner-registrations.*') || request()->routeIs('dashboard')">
+                    {{ __('Owner Approvals') }}
+                </x-responsive-nav-link>
+            @elseif ($organizationMemberships->isNotEmpty())
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard') || request()->routeIs('services.*') || request()->routeIs('orders.*') || request()->routeIs('memberships.*') || request()->routeIs('shops.*') || request()->routeIs('organizations.*')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
             @endif
 
-            @if ($isCustomer)
-                <x-responsive-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.index') || request()->routeIs('customer.orders.show')">
-                    {{ __('My Orders') }}
-                </x-responsive-nav-link>
-            @endif
         </div>
 
         <!-- Responsive Settings Options -->
@@ -161,9 +167,8 @@
             @else
                 <div class="px-4 space-y-1">
                     <a href="{{ route('customer.login') }}" class="block text-sm font-medium text-teal-800 hover:text-teal-950">Customer Login</a>
-                    <a href="{{ route('customer.register') }}" class="block text-sm font-medium text-teal-800 hover:text-teal-950">Customer Register</a>
-                    <a href="{{ route('admin.login') }}" class="block text-sm font-medium text-teal-800 hover:text-teal-950">Admin Login</a>
-                    <a href="{{ route('admin.register') }}" class="block text-sm font-medium text-teal-800 hover:text-teal-950">Admin Register</a>
+                    <a href="{{ route('admin.login') }}" class="block text-sm font-medium text-teal-800 hover:text-teal-950">Shop Owner Login</a>
+                    <a href="{{ route('platform-admin.login') }}" class="block text-sm font-medium text-teal-800 hover:text-teal-950">Admin Login</a>
                 </div>
             @endauth
 
@@ -198,6 +203,12 @@
                     <x-responsive-nav-link :href="route('profile.edit')">
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
+
+                    @if ($isPlatformAdmin)
+                        <x-responsive-nav-link :href="route('platform-admin.owner-registrations.index')">
+                            {{ __('Owner Approvals') }}
+                        </x-responsive-nav-link>
+                    @endif
 
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

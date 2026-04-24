@@ -6,6 +6,7 @@ use App\Models\Membership;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,7 @@ class MembershipController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        $organization = $this->ownerOrganization($request);
+        $organization = $this->currentOrganization($request);
         $currentRole = $this->currentRole($request);
 
         if (! $organization) {
@@ -23,6 +24,8 @@ class MembershipController extends Controller
                 ->route('organizations.create')
                 ->with('warning', 'Create your organization first to manage members.');
         }
+
+        Gate::authorize('viewAny', [Membership::class, $organization]);
 
         $memberSearch = trim((string) $request->string('member_search'));
         $memberRoleFilter = (string) $request->string('member_role');
@@ -63,13 +66,15 @@ class MembershipController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $organization = $this->ownerOrganization($request);
+        $organization = $this->currentOrganization($request);
 
         if (! $organization) {
             return redirect()
                 ->route('organizations.create')
                 ->with('warning', 'Create your organization first to manage members.');
         }
+
+        Gate::authorize('create', [Membership::class, $organization]);
 
         $validated = $request->validateWithBag('membershipCreate', [
             'name' => 'required|string|max:255',
@@ -135,10 +140,7 @@ class MembershipController extends Controller
 
     public function destroy(Request $request, Membership $membership): RedirectResponse
     {
-        $organization = $this->ownerOrganization($request);
-
-        abort_unless($membership->organization_id === $organization->id, 403);
-        abort_if($membership->role === 'owner', 403);
+        Gate::authorize('delete', $membership);
 
         $membership->delete();
 
@@ -147,10 +149,9 @@ class MembershipController extends Controller
 
     public function update(Request $request, Membership $membership): RedirectResponse
     {
-        $organization = $this->ownerOrganization($request);
+        Gate::authorize('update', $membership);
 
-        abort_unless($membership->organization_id === $organization->id, 403);
-        abort_if($membership->role === 'owner', 403);
+        $organization = $this->currentOrganization($request);
 
         $validated = $request->validateWithBag('membershipUpdate-'.$membership->id, [
             'membership_id' => 'required|integer|in:'.$membership->id,

@@ -12,8 +12,26 @@ class CustomerShopController extends Controller
     {
         $search = trim((string) $request->string('search'));
 
+        $memberships = $request->user()?->memberships()->get(['organization_id', 'shop_id', 'role']) ?? collect();
+        $ownerOrganizationIds = $memberships->where('role', 'owner')->pluck('organization_id')->filter()->unique()->values();
+        $assignedShopIds = $memberships->whereIn('role', ['manager', 'staff'])->pluck('shop_id')->filter()->unique()->values();
+
         $shops = Shop::query()
             ->with(['organization', 'shopServices.service'])
+            ->withCount(['orders as ratings_count' => fn ($query) => $query->whereNotNull('shop_rating')])
+            ->withAvg(['orders as average_rating' => fn ($query) => $query->whereNotNull('shop_rating')], 'shop_rating')
+            ->when($memberships->isNotEmpty(), function ($query) use ($ownerOrganizationIds, $assignedShopIds) {
+                $query->where(function ($builder) use ($ownerOrganizationIds, $assignedShopIds) {
+                    if ($ownerOrganizationIds->isNotEmpty()) {
+                        $builder->whereIn('organization_id', $ownerOrganizationIds);
+                    }
+
+                    if ($assignedShopIds->isNotEmpty()) {
+                        $method = $ownerOrganizationIds->isNotEmpty() ? 'orWhereIn' : 'whereIn';
+                        $builder->{$method}('id', $assignedShopIds);
+                    }
+                });
+            })
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($builder) use ($search) {
                     $builder->where('shop_name', 'like', '%'.$search.'%')
@@ -27,24 +45,16 @@ class CustomerShopController extends Controller
         return view('customer.shops.index', [
             'shops' => $shops,
             'search' => $search,
-            'demoAccounts' => [
-                'customers' => [
-                    ['label' => 'Customer Demo', 'email' => 'bob@example.com', 'password' => 'password', 'description' => 'Use this to browse shops and review seeded customer orders.'],
-                    ['label' => 'Second Customer', 'email' => 'mia@example.com', 'password' => 'password', 'description' => 'Use this to test a different customer order history.'],
-                ],
-                'admins' => [
-                    ['label' => 'Owner Demo', 'email' => 'john@example.com', 'password' => 'password', 'description' => 'Owner of QuickClean Laundry and manager in FreshFold Laundry for switcher testing.'],
-                    ['label' => 'Manager Demo', 'email' => 'alice@example.com', 'password' => 'password', 'description' => 'Manager in QuickClean Laundry.'],
-                    ['label' => 'Owner Demo 2', 'email' => 'jane@example.com', 'password' => 'password', 'description' => 'Owner of FreshFold Laundry.'],
-                    ['label' => 'Staff Demo', 'email' => 'mark@example.com', 'password' => 'password', 'description' => 'Staff account in FreshFold Laundry.'],
-                ],
-            ],
         ]);
     }
 
     public function show(Shop $shop): View
     {
-        $shop->load(['organization', 'shopServices.service']);
+        $shop = Shop::query()
+            ->with(['organization', 'shopServices.service'])
+            ->withCount(['orders as ratings_count' => fn ($query) => $query->whereNotNull('shop_rating')])
+            ->withAvg(['orders as average_rating' => fn ($query) => $query->whereNotNull('shop_rating')], 'shop_rating')
+            ->findOrFail($shop->id);
 
         return view('customer.shops.show', [
             'shop' => $shop,

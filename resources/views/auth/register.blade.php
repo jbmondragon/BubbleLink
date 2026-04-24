@@ -6,7 +6,7 @@
         <div class="flex items-center justify-center gap-3 text-sm">
             <a class="text-emerald-700 hover:text-emerald-900" href="{{ route($loginRoute ?? 'login') }}">{{ $loginLabel ?? 'Already registered?' }}</a>
             <span class="text-slate-300">|</span>
-            <a class="text-emerald-700 hover:text-emerald-900" href="{{ route($alternateRegisterRoute ?? 'admin.register') }}">{{ $alternateRegisterLabel ?? 'Need an admin account?' }}</a>
+            <a class="text-emerald-700 hover:text-emerald-900" href="{{ route($alternateRegisterRoute ?? 'admin.register') }}">{{ $alternateRegisterLabel ?? 'Need a shop owner account?' }}</a>
         </div>
     </div>
 

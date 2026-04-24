@@ -27,18 +27,18 @@ class RegisteredUserController extends Controller
             loginRoute: 'customer.login',
             loginLabel: 'Already a customer?',
             alternateRegisterRoute: 'admin.register',
-            alternateRegisterLabel: 'Need an admin account?'
+            alternateRegisterLabel: 'Need a shop owner account?'
         );
     }
 
     public function createAdmin(): View
     {
         return $this->renderRegisterView(
-            heading: 'Admin registration',
-            description: 'Create an admin account to start managing your laundry business.',
+            heading: 'Shop Owner registration',
+            description: 'Create a shop owner account and wait for platform admin approval before managing your laundry business.',
             formActionRoute: 'admin.register.store',
             loginRoute: 'admin.login',
-            loginLabel: 'Already registered as admin?',
+            loginLabel: 'Already registered as a shop owner?',
             alternateRegisterRoute: 'customer.register',
             alternateRegisterLabel: 'Need a customer account?'
         );
@@ -51,6 +51,8 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $isShopOwnerRegistration = $request->routeIs('admin.register.store');
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
@@ -63,17 +65,18 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'contact_number' => $request->contact_number,
             'password' => Hash::make($request->password),
+            'owner_registration_status' => $isShopOwnerRegistration ? 'pending' : null,
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        if ($request->routeIs('admin.register.store')) {
+        if ($isShopOwnerRegistration) {
             return redirect()
-                ->route('admin.start')
-                ->with('success', 'Admin account created. Set up your organization to start managing your business.');
+                ->route('admin.login')
+                ->with('success', 'Shop owner registration submitted. Wait for platform admin approval before logging in.');
         }
+
+        Auth::login($user);
 
         return redirect(route('customer.shops.index', absolute: false));
     }

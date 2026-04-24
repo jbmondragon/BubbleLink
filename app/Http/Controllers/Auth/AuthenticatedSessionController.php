@@ -21,7 +21,7 @@ class AuthenticatedSessionController extends Controller
             description: 'Sign in to browse shops, place orders, and track your laundry.',
             formActionRoute: 'customer.login.store',
             alternateLoginRoute: 'admin.login',
-            alternateLoginLabel: 'Admin login',
+            alternateLoginLabel: 'Shop Owner login',
             registerRoute: 'customer.register',
             registerLabel: 'Create customer account'
         );
@@ -30,13 +30,26 @@ class AuthenticatedSessionController extends Controller
     public function createAdmin(): View
     {
         return $this->renderLoginView(
-            heading: 'Admin login',
+            heading: 'Shop Owner login',
             description: 'Sign in to manage your organization, services, staff, and orders.',
             formActionRoute: 'admin.login.store',
             alternateLoginRoute: 'customer.login',
             alternateLoginLabel: 'Customer login',
             registerRoute: 'admin.register',
-            registerLabel: 'Create admin account'
+            registerLabel: 'Create shop owner account'
+        );
+    }
+
+    public function createPlatformAdmin(): View
+    {
+        return $this->renderLoginView(
+            heading: 'Platform Admin login',
+            description: 'Sign in to review and approve shop owner registration requests.',
+            formActionRoute: 'platform-admin.login.store',
+            alternateLoginRoute: 'admin.login',
+            alternateLoginLabel: 'Shop Owner login',
+            registerRoute: 'customer.login',
+            registerLabel: 'Customer login'
         );
     }
 
@@ -49,10 +62,46 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        if ($request->routeIs('admin.login.store') && ! $request->user()->memberships()->exists()) {
-            return redirect()
-                ->route('admin.start')
-                ->with('warning', 'No organization is linked to this admin account yet. Start your admin setup to continue.');
+        if ($request->routeIs('platform-admin.login.store')) {
+            if (! $request->user()->is_platform_admin) {
+                return $this->rejectAuthenticatedLogin($request, 'This account does not have platform admin access.');
+            }
+
+            return redirect()->intended(route('platform-admin.owner-registrations.index', absolute: false));
+        }
+
+        if ($request->routeIs('admin.login.store')) {
+            if ($request->user()->is_platform_admin) {
+                return redirect()->intended(route('platform-admin.owner-registrations.index', absolute: false));
+            }
+
+            if ($request->user()->memberships()->exists()) {
+                return redirect()->intended(route('dashboard', absolute: false));
+            }
+
+            if ($request->user()->isApprovedShopOwnerRegistration()) {
+                return redirect()
+                    ->route('admin.start')
+                    ->with('success', 'Shop owner account approved. Create your organization to get started.');
+            }
+
+            if ($request->user()->isPendingShopOwnerApproval()) {
+                return $this->rejectAuthenticatedLogin($request, 'Your shop owner registration is still pending approval.');
+            }
+
+            if ($request->user()->isRejectedShopOwnerRegistration()) {
+                return $this->rejectAuthenticatedLogin($request, 'Your shop owner registration was rejected. Please contact the platform admin.');
+            }
+
+            return $this->rejectAuthenticatedLogin($request, 'This account does not have shop owner access.');
+        }
+
+        if ($request->user()->is_platform_admin) {
+            return $this->rejectAuthenticatedLogin($request, 'Please use Admin login for this account.');
+        }
+
+        if ($request->user()->memberships()->exists() || $request->user()->owner_registration_status !== null) {
+            return $this->rejectAuthenticatedLogin($request, 'Please use Shop Owner login for this account.');
         }
 
         $redirectRoute = $request->user()->memberships()->exists()
@@ -74,6 +123,18 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function rejectAuthenticatedLogin(LoginRequest $request, string $message): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return back()
+            ->withErrors(['email' => $message])
+            ->onlyInput('email');
     }
 
     private function renderLoginView(

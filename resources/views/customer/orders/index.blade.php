@@ -37,11 +37,21 @@
                                 <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Order #{{ $order->id }}</p>
                                 <h2 class="mt-2 text-2xl font-semibold text-slate-900">{{ $order->shop->shop_name }}</h2>
                                 <p class="mt-1 text-sm text-slate-600">{{ $order->shopService->service->name }} · {{ ucfirst(str_replace('_', ' ', $order->service_mode)) }}</p>
+                                @if ($order->shop_rating)
+                                    <p class="mt-2 text-sm text-amber-600">Rated {{ $order->shop_rating }}/5</p>
+                                @elseif ($order->status === 'completed')
+                                    <p class="mt-2 text-sm text-slate-500">Completed order. You can rate this shop from the order details page.</p>
+                                @endif
                             </div>
 
                             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                                 <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{{ str_replace('_', ' ', $order->status) }}</span>
                                 <span class="text-sm font-semibold text-slate-900">PHP {{ number_format((float) $order->total_price, 2) }}</span>
+                                @if ($order->status === 'completed')
+                                    <a href="{{ route('customer.orders.show', $order) }}#shop-rating" class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100">
+                                        {{ $order->shop_rating ? 'Edit rating' : 'Rate shop' }}
+                                    </a>
+                                @endif
                                 <a href="{{ route('customer.orders.show', $order) }}" class="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700">View order</a>
                             </div>
                         </div>

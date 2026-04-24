@@ -3,13 +3,39 @@
 namespace App\Http\Controllers;
 
 use App\Models\Membership;
-use App\Models\Order;
 use App\Models\Organization;
-use App\Models\Shop;
 use Illuminate\Http\Request;
 
 abstract class Controller
 {
+    protected function ensureCustomer(Request $request): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            ! $user->is_platform_admin
+            && ! $user->memberships()->exists()
+            && $user->owner_registration_status === null,
+            403
+        );
+    }
+
+    protected function ensureOrganizationCreator(Request $request): void
+    {
+        $user = $request->user();
+
+        abort_if($user->is_platform_admin, 403);
+
+        if ($user->memberships()->where('role', 'owner')->exists()) {
+            return;
+        }
+
+        abort_unless(
+            $user->isApprovedShopOwnerRegistration() && ! $user->memberships()->exists(),
+            403
+        );
+    }
+
     protected function currentMembership(Request $request): ?Membership
     {
         $memberships = $request->user()
@@ -63,60 +89,5 @@ abstract class Controller
     protected function ownerOrganization(Request $request): ?Organization
     {
         return $this->organizationForRoles($request, ['owner']);
-    }
-
-    protected function ensureOwnerForOrganization(Request $request, int $organizationId): void
-    {
-        $this->ensureOrganizationRole($request, $organizationId, ['owner']);
-    }
-
-    protected function ensureOrganizationRole(Request $request, int $organizationId, array $roles): void
-    {
-        abort_unless(
-            $request->user()->memberships()
-                ->whereIn('role', $roles)
-                ->where('organization_id', $organizationId)
-                ->exists(),
-            403
-        );
-    }
-
-    protected function ensureOwnerForShop(Request $request, Shop $shop): void
-    {
-        $this->ensureOwnerForOrganization($request, $shop->organization_id);
-    }
-
-    protected function ensureShopRole(Request $request, Shop $shop, array $roles): void
-    {
-        $membershipQuery = $request->user()->memberships()->where('organization_id', $shop->organization_id);
-
-        if (in_array('owner', $roles, true) && (clone $membershipQuery)->where('role', 'owner')->exists()) {
-            return;
-        }
-
-        $scopedRoles = array_values(array_diff($roles, ['owner']));
-
-        abort_unless(
-            ! empty($scopedRoles)
-            && (clone $membershipQuery)
-                ->whereIn('role', $scopedRoles)
-                ->where('shop_id', $shop->id)
-                ->exists(),
-            403
-        );
-    }
-
-    protected function ensureOwnerForOrder(Request $request, Order $order): void
-    {
-        $order->loadMissing('shop');
-
-        $this->ensureOwnerForShop($request, $order->shop);
-    }
-
-    protected function ensureOrderRole(Request $request, Order $order, array $roles): void
-    {
-        $order->loadMissing('shop');
-
-        $this->ensureShopRole($request, $order->shop, $roles);
     }
 }

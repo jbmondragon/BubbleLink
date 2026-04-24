@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Shop;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class ShopController extends Controller
 {
     public function show(Request $request, Shop $shop): View
     {
-        $this->ensureShopRole($request, $shop, ['owner', 'manager', 'staff']);
+        Gate::authorize('view', $shop);
         $currentRole = $this->currentRole($request);
 
         $shop->load([
@@ -39,13 +40,12 @@ class ShopController extends Controller
     public function create(Request $request): View
     {
         $organization = $this->currentOrganization($request);
-        $currentRole = $this->currentRole($request);
 
         if (! $organization) {
             return view('shops.create', ['organization' => null]);
         }
 
-        abort_unless($currentRole === 'owner', 403);
+        Gate::authorize('create', [Shop::class, $organization]);
 
         return view('shops.create', ['organization' => $organization]);
     }
@@ -60,7 +60,7 @@ class ShopController extends Controller
             'description' => 'nullable|string|max:255',
         ]);
 
-        $this->ensureOrganizationRole($request, (int) $validated['organization_id'], ['owner']);
+        Gate::authorize('create', [Shop::class, $this->currentOrganization($request)]);
 
         Shop::create($validated);
 
@@ -69,14 +69,14 @@ class ShopController extends Controller
 
     public function edit(Request $request, Shop $shop): View
     {
-        $this->ensureShopRole($request, $shop, ['owner']);
+        Gate::authorize('update', $shop);
 
         return view('shops.edit', ['shop' => $shop]);
     }
 
     public function update(Request $request, Shop $shop): RedirectResponse
     {
-        $this->ensureShopRole($request, $shop, ['owner']);
+        Gate::authorize('update', $shop);
 
         $validated = $request->validate([
             'shop_name' => 'required|string|max:255',
@@ -92,7 +92,7 @@ class ShopController extends Controller
 
     public function destroy(Request $request, Shop $shop): RedirectResponse
     {
-        $this->ensureShopRole($request, $shop, ['owner']);
+        Gate::authorize('delete', $shop);
 
         $shop->delete();
 

@@ -7,7 +7,9 @@ use App\Models\Shop;
 use App\Models\User;
 
 test('guided organization creation redirects owners into the setup wizard', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'owner_registration_status' => 'approved',
+    ]);
 
     $response = $this->actingAs($user)->post('/organizations', [
         'name' => 'Wizard Wash Laundry',
@@ -26,6 +28,21 @@ test('guided organization creation redirects owners into the setup wizard', func
         'organization_id' => $organization->id,
         'role' => 'owner',
     ]);
+});
+
+test('customers can not access organization creation routes', function () {
+    $customer = User::factory()->create();
+
+    $this->actingAs($customer)
+        ->get(route('organizations.create'))
+        ->assertForbidden();
+
+    $this->actingAs($customer)
+        ->post(route('organizations.store'), [
+            'name' => 'Blocked Customer Organization',
+            'guided' => 1,
+        ])
+        ->assertForbidden();
 });
 
 test('owners can complete the guided admin setup wizard', function () {
@@ -102,7 +119,9 @@ test('owners can complete the guided admin setup wizard', function () {
 });
 
 test('admins without an owned organization are redirected back to onboarding from the setup wizard', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'owner_registration_status' => 'approved',
+    ]);
 
     $this->actingAs($user)
         ->get(route('admin.setup'))

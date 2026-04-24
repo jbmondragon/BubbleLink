@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -26,6 +27,10 @@ class User extends Authenticatable
         'email',
         'password',
         'contact_number',
+        'is_platform_admin',
+        'owner_registration_status',
+        'approved_by_user_id',
+        'owner_registration_reviewed_at',
     ];
 
     /**
@@ -47,7 +52,14 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'is_platform_admin' => 'bool',
+            'owner_registration_reviewed_at' => 'datetime',
         ];
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'approved_by_user_id');
     }
 
     public function ownedOrganizations(): HasMany
@@ -63,5 +75,20 @@ class User extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class, 'customer_id');
+    }
+
+    public function isPendingShopOwnerApproval(): bool
+    {
+        return $this->owner_registration_status === 'pending';
+    }
+
+    public function isRejectedShopOwnerRegistration(): bool
+    {
+        return $this->owner_registration_status === 'rejected';
+    }
+
+    public function isApprovedShopOwnerRegistration(): bool
+    {
+        return $this->owner_registration_status === 'approved';
     }
 }

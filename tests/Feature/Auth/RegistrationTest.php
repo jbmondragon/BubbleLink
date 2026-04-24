@@ -13,7 +13,7 @@ test('admin registration screen can be rendered', function () {
     $response = $this->get('/admin/register');
 
     $response->assertStatus(200);
-    $response->assertSee('Admin registration');
+    $response->assertSee('Shop Owner registration');
 });
 
 test('new users can register', function () {
@@ -30,7 +30,7 @@ test('new users can register', function () {
     $response->assertRedirect(route('customer.shops.index', absolute: false));
 });
 
-test('new admins can register and are redirected to admin onboarding', function () {
+test('new shop owners can register and await approval', function () {
     $response = $this->post('/admin/register', [
         'name' => 'Admin User',
         'email' => 'admin@example.com',
@@ -39,8 +39,9 @@ test('new admins can register and are redirected to admin onboarding', function 
         'password_confirmation' => 'password',
     ]);
 
-    $this->assertAuthenticated();
+    $this->assertGuest();
     expect(User::query()->where('email', 'admin@example.com')->value('contact_number'))->toBe('09995554444');
-    $response->assertRedirect(route('admin.start', absolute: false));
-    $response->assertSessionHas('success', 'Admin account created. Set up your organization to start managing your business.');
+    expect(User::query()->where('email', 'admin@example.com')->value('owner_registration_status'))->toBe('pending');
+    $response->assertRedirect(route('admin.login', absolute: false));
+    $response->assertSessionHas('success', 'Shop owner registration submitted. Wait for platform admin approval before logging in.');
 });

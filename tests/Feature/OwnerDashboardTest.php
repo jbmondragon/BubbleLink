@@ -150,8 +150,10 @@ it('lets an owner view the memberships and shop pages but not the service or ord
         ->assertDontSee(route('orders.index'), false);
 });
 
-it('redirects users without an organization to organization setup from dedicated management pages', function () {
-    $user = createUser();
+it('redirects approved shop owners without an organization to organization setup from dedicated management pages', function () {
+    $user = User::factory()->create([
+        'owner_registration_status' => 'approved',
+    ]);
 
     $this->actingAs($user)
         ->get(route('services.index'))
@@ -169,8 +171,10 @@ it('redirects users without an organization to organization setup from dedicated
         ->assertSessionHas('warning', 'Create your organization first to manage members.');
 });
 
-it('shows organization setup links on the dashboard when the user is not yet an owner', function () {
-    $user = createUser();
+it('shows organization setup links on the dashboard for approved shop owners without an organization', function () {
+    $user = User::factory()->create([
+        'owner_registration_status' => 'approved',
+    ]);
 
     $this->actingAs($user)
         ->get(route('dashboard'))
@@ -276,6 +280,38 @@ it('lets a user switch the active organization they are managing', function () {
         ->assertOk();
 });
 
+it('shows owners only the shops from organizations they own on the browse shops page', function () {
+    ['owner' => $owner, 'organization' => $organization, 'shop' => $ownedShop] = createOwnerDashboardContext(includeOrder: false, includeService: false);
+
+    $otherOwner = createUser();
+    $otherOrganization = Organization::create([
+        'name' => 'Outside Laundry',
+        'owner_user_id' => $otherOwner->id,
+    ]);
+
+    Membership::create([
+        'user_id' => $otherOwner->id,
+        'organization_id' => $otherOrganization->id,
+        'role' => 'owner',
+    ]);
+
+    $otherShop = Shop::create([
+        'organization_id' => $otherOrganization->id,
+        'shop_name' => 'Outside Branch',
+        'address' => '789 Other Street',
+        'contact_number' => '09179999999',
+        'description' => 'Another organization shop',
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('customer.shops.index'))
+        ->assertOk()
+        ->assertSeeText($organization->name)
+        ->assertSeeText($ownedShop->shop_name)
+        ->assertDontSeeText($otherOrganization->name)
+        ->assertDontSeeText($otherShop->shop_name);
+});
+
 it('forbids switching to an organization the user does not belong to', function () {
     ['owner' => $owner] = createOwnerDashboardContext(includeOrder: false, includeService: false);
 
@@ -300,7 +336,9 @@ it('forbids switching to an organization the user does not belong to', function 
 });
 
 it('shows the redirect warning on the organization setup page', function () {
-    $user = createUser();
+    $user = User::factory()->create([
+        'owner_registration_status' => 'approved',
+    ]);
 
     $this->actingAs($user)
         ->followingRedirects()

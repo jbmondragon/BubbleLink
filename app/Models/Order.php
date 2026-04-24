@@ -26,6 +26,8 @@ class Order extends Model
         'status',
         'payment_method',
         'payment_status',
+        'shop_rating',
+        'rated_at',
     ];
 
     protected function casts(): array
@@ -35,6 +37,7 @@ class Order extends Model
             'total_price' => 'decimal:2',
             'pickup_datetime' => 'datetime',
             'delivery_datetime' => 'datetime',
+            'rated_at' => 'datetime',
         ];
     }
 

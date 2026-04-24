@@ -3,7 +3,7 @@
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div class="app-hero overflow-hidden rounded-3xl px-8 py-10 text-white">
                 <p class="text-sm font-semibold uppercase tracking-[0.3em] text-orange-100">Guided Setup</p>
-                <h1 class="mt-3 text-4xl font-semibold leading-tight">Finish your first admin setup for {{ $organization->name }}.</h1>
+                <h1 class="mt-3 text-4xl font-semibold leading-tight">Finish your first shop owner setup for {{ $organization->name }}.</h1>
                 <p class="mt-4 max-w-2xl text-sm text-orange-50/90">Use this guided wizard to create the minimum setup your team needs: one shop, one service, and one teammate.</p>
             </div>
 

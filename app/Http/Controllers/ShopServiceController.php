@@ -7,6 +7,7 @@ use App\Models\Shop;
 use App\Models\ShopService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class ShopServiceController extends Controller
@@ -23,7 +24,7 @@ class ShopServiceController extends Controller
         ]);
 
         $shop = Shop::findOrFail($validated['shop_id']);
-        $this->ensureShopRole($request, $shop, ['manager']);
+        Gate::authorize('create', [ShopService::class, $shop]);
 
         $serviceExistsForOrganization = Service::query()
             ->whereKey($validated['service_id'])
@@ -45,9 +46,7 @@ class ShopServiceController extends Controller
 
     public function destroy(Request $request, ShopService $shopService): RedirectResponse
     {
-        $shopService->loadMissing('shop');
-
-        $this->ensureShopRole($request, $shopService->shop, ['manager']);
+        Gate::authorize('delete', $shopService);
 
         $shopService->delete();
 

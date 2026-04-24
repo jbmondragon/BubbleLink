@@ -35,6 +35,10 @@
                                 <dt class="font-semibold text-slate-900">Services available</dt>
                                 <dd>{{ $services->count() }}</dd>
                             </div>
+                            <div>
+                                <dt class="font-semibold text-slate-900">Customer rating</dt>
+                                <dd>{{ $shop->ratings_count > 0 ? number_format((float) $shop->average_rating, 1).' / 5 from '.$shop->ratings_count.' rating'.($shop->ratings_count === 1 ? '' : 's') : 'No ratings yet' }}</dd>
+                            </div>
                         </dl>
                     </div>
                 </div>
@@ -81,8 +85,8 @@
                     <p class="text-xs uppercase tracking-[0.3em] text-white/80">Order flow</p>
                     <ol class="mt-4 space-y-4 text-sm text-white/90">
                         <li>1. Pick a service from the list.</li>
-                        <li>2. Choose pickup, delivery, or both.</li>
-                        <li>3. Submit your preferred date, time, and addresses.</li>
+                        <li>2. Choose walk-in, pickup, delivery, or both.</li>
+                        <li>3. Submit only the transport details needed for your selected option.</li>
                         <li>4. Track progress from the My Orders page.</li>
                     </ol>
                 </section>

@@ -10,8 +10,10 @@ use Illuminate\View\View;
 
 class OrganizationController extends Controller
 {
-    public function create(): View
+    public function create(Request $request): View
     {
+        $this->ensureOrganizationCreator($request);
+
         return view('organizations.create', [
             'guided' => request()->boolean('guided'),
         ]);
@@ -19,6 +21,8 @@ class OrganizationController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->ensureOrganizationCreator($request);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'guided' => 'nullable|boolean',

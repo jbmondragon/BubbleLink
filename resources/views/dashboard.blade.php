@@ -65,9 +65,7 @@
         <div class="mb-10">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold">Shops</h2>
-                @if (! $organization)
-                    <a href="{{ route('organizations.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Create Organization</a>
-                @elseif ($canManageShops)
+                    @if ($canManageShops)
                     <a href="{{ route('shops.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Create Shop</a>
                 @endif
             </div>

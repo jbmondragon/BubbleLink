@@ -4,7 +4,7 @@
         <h1 class="text-2xl font-semibold text-slate-900">{{ $heading ?? 'Customer login' }}</h1>
         <p class="text-sm text-slate-600">{{ $description ?? 'Sign in to continue.' }}</p>
         <div class="flex items-center justify-center gap-3 text-sm">
-            <a class="text-emerald-700 hover:text-emerald-900" href="{{ route($alternateLoginRoute ?? 'admin.login') }}">{{ $alternateLoginLabel ?? 'Admin login' }}</a>
+            <a class="text-emerald-700 hover:text-emerald-900" href="{{ route($alternateLoginRoute ?? 'admin.login') }}">{{ $alternateLoginLabel ?? 'Shop Owner login' }}</a>
             <span class="text-slate-300">|</span>
             <a class="text-emerald-700 hover:text-emerald-900" href="{{ route($registerRoute ?? 'customer.register') }}">{{ $registerLabel ?? 'Create account' }}</a>
         </div>

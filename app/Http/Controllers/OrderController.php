@@ -8,6 +8,7 @@ use App\Models\ShopService;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -130,7 +131,7 @@ class OrderController extends Controller
                 'required',
                 Rule::exists('shop_services', 'id')->where(fn ($query) => $query->where('shop_id', $request->integer('shop_id'))),
             ],
-            'service_mode' => 'required|in:pickup_only,delivery_only,both',
+            'service_mode' => 'required|in:pickup_only,delivery_only,both,walk_in',
             'pickup_address' => 'nullable|required_if:service_mode,pickup_only,both|string|max:255',
             'delivery_address' => 'nullable|required_if:service_mode,delivery_only,both|string|max:255',
             'weight' => 'nullable|numeric|min:0',
@@ -140,10 +141,13 @@ class OrderController extends Controller
             'payment_status' => 'nullable|in:paid,unpaid',
         ]);
 
+        $requiresPickup = in_array($validated['service_mode'], ['pickup_only', 'both'], true);
+        $requiresDelivery = in_array($validated['service_mode'], ['delivery_only', 'both'], true);
+
         $shop = Shop::query()->findOrFail($validated['shop_id']);
         $shopService = ShopService::query()->with('shop')->findOrFail($validated['shop_service_id']);
 
-        $this->ensureShopRole($request, $shop, ['manager', 'staff']);
+        Gate::authorize('create', [Order::class, $shop]);
 
         abort_unless($shopService->shop_id === $shop->id, 422);
 
@@ -165,11 +169,11 @@ class OrderController extends Controller
             'shop_id' => $shop->id,
             'shop_service_id' => $shopService->id,
             'service_mode' => $validated['service_mode'],
-            'pickup_address' => $validated['pickup_address'] ?? null,
-            'delivery_address' => $validated['delivery_address'] ?? null,
+            'pickup_address' => $requiresPickup ? ($validated['pickup_address'] ?? null) : null,
+            'delivery_address' => $requiresDelivery ? ($validated['delivery_address'] ?? null) : null,
             'weight' => $validated['weight'] ?? null,
-            'pickup_datetime' => $validated['pickup_datetime'] ?? null,
-            'delivery_datetime' => $validated['delivery_datetime'] ?? null,
+            'pickup_datetime' => $requiresPickup ? ($validated['pickup_datetime'] ?? null) : null,
+            'delivery_datetime' => $requiresDelivery ? ($validated['delivery_datetime'] ?? null) : null,
             'total_price' => $shopService->price,
             'status' => 'pending',
             'payment_method' => $validated['payment_method'] ?? null,
@@ -181,12 +185,13 @@ class OrderController extends Controller
 
     public function update(Request $request, Order $order): RedirectResponse
     {
-        $this->ensureOrderRole($request, $order, ['manager', 'staff']);
+        Gate::authorize('update', $order);
 
         $validated = $request->validateWithBag('orderUpdate-'.$order->id, [
             'order_id' => 'required|integer|in:'.$order->id,
             'status' => 'required|in:pending,accepted,awaiting_dropoff,rejected,in_progress,completed',
             'payment_status' => 'nullable|in:paid,unpaid',
+            'weight' => 'nullable|numeric|min:0',
         ]);
 
         unset($validated['order_id']);

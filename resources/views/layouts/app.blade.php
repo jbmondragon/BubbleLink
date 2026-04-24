@@ -15,6 +15,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased text-slate-900">
+        @include('layouts.background-bubbles')
+
         <div class="app-shell">
             @include('layouts.navigation')
 

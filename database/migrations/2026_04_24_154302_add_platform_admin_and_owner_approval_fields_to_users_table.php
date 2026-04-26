@@ -22,21 +22,21 @@ return new class extends Migration
             $table->foreign('approved_by_user_id')->references('id')->on('users')->nullOnDelete();
         });
 
-        if (! DB::table('users')->where('is_platform_admin', true)->exists()) {
-            DB::table('users')->insert([
-                'name' => 'System Admin',
-                'email' => 'admin@bubblelink.test',
-                'email_verified_at' => now(),
-                'password' => bcrypt('password'),
-                'remember_token' => Str::random(10),
-                'contact_number' => '09170000007',
-                'is_platform_admin' => true,
-                'owner_registration_status' => null,
-                'approved_by_user_id' => null,
-                'owner_registration_reviewed_at' => null,
-                'created_at' => now(),
-            ]);
-        }
+        // if (! DB::table('users')->where('is_platform_admin', true)->exists()) {
+        //     DB::table('users')->insert([
+        //         'name' => 'System Admin',
+        //         'email' => 'admin@bubblelink.test',
+        //         'email_verified_at' => now(),
+        //         'password' => bcrypt('password'),
+        //         'remember_token' => Str::random(10),
+        //         'contact_number' => '09170000007',
+        //         'is_platform_admin' => true,
+        //         'owner_registration_status' => null,
+        //         'approved_by_user_id' => null,
+        //         'owner_registration_reviewed_at' => null,
+        //         'created_at' => now(),
+        //     ]);
+        // }
     }
 
     /**

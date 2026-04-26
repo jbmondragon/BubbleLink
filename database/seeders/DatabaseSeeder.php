@@ -30,18 +30,18 @@ class DatabaseSeeder extends Seeder
             ['id' => 2, 'name' => 'FreshFold Laundry', 'owner_user_id' => 4, 'created_at' => now()],
         ]);
 
+        \DB::table('shops')->insert([
+            ['id' => 1, 'organization_id' => 1, 'shop_name' => 'QuickClean Manila', 'address' => 'Manila City', 'contact_number' => '0287001001', 'description' => 'Pickup, delivery, and same-day folding for busy households.', 'created_at' => now()],
+            ['id' => 2, 'organization_id' => 1, 'shop_name' => 'QuickClean Cebu', 'address' => 'Cebu City', 'contact_number' => '0327001002', 'description' => 'Branch focused on scheduled neighborhood pickups.', 'created_at' => now()],
+            ['id' => 3, 'organization_id' => 2, 'shop_name' => 'FreshFold Davao', 'address' => 'Davao City', 'contact_number' => '0827001003', 'description' => 'Express steam and premium garment care for Davao customers.', 'created_at' => now()],
+        ]);
+
         \DB::table('memberships')->insert([
             ['id' => 1, 'user_id' => 1, 'organization_id' => 1, 'shop_id' => null, 'role' => 'owner', 'created_at' => now()],
             ['id' => 2, 'user_id' => 2, 'organization_id' => 1, 'shop_id' => 1, 'role' => 'manager', 'created_at' => now()],
             ['id' => 3, 'user_id' => 4, 'organization_id' => 2, 'shop_id' => null, 'role' => 'owner', 'created_at' => now()],
             ['id' => 4, 'user_id' => 5, 'organization_id' => 2, 'shop_id' => 3, 'role' => 'staff', 'created_at' => now()],
             ['id' => 5, 'user_id' => 1, 'organization_id' => 2, 'shop_id' => 3, 'role' => 'manager', 'created_at' => now()],
-        ]);
-
-        \DB::table('shops')->insert([
-            ['id' => 1, 'organization_id' => 1, 'shop_name' => 'QuickClean Manila', 'address' => 'Manila City', 'contact_number' => '0287001001', 'description' => 'Pickup, delivery, and same-day folding for busy households.', 'created_at' => now()],
-            ['id' => 2, 'organization_id' => 1, 'shop_name' => 'QuickClean Cebu', 'address' => 'Cebu City', 'contact_number' => '0327001002', 'description' => 'Branch focused on scheduled neighborhood pickups.', 'created_at' => now()],
-            ['id' => 3, 'organization_id' => 2, 'shop_name' => 'FreshFold Davao', 'address' => 'Davao City', 'contact_number' => '0827001003', 'description' => 'Express steam and premium garment care for Davao customers.', 'created_at' => now()],
         ]);
 
         \DB::table('services')->insert([

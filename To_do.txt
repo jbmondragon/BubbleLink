@@ -1,4 +1,7 @@
-- Add a delete option for order cancellations that are pending
+Note to self: open xampp, run apache and mysql, then use "composer run dev" to start the project
+
+
+ Add a delete option for order cancellations that are pending
 - For Service mode, add in payment option (Gcash, COD)
 - Amount should multiply per kg for Service
 - Color coding for paid(green) and unpaid(red) in the order lists DONE

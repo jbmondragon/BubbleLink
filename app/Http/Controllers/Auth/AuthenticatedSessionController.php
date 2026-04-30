@@ -64,7 +64,7 @@ class AuthenticatedSessionController extends Controller
 
         if ($request->routeIs('platform-admin.login.store')) {
             if (! $request->user()->is_platform_admin) {
-                return $this->rejectAuthenticatedLogin($request, 'This account does not have platform admin access.');
+                return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
             }
 
             return redirect()->intended(route('platform-admin.owner-registrations.index', absolute: false));
@@ -72,7 +72,7 @@ class AuthenticatedSessionController extends Controller
 
         if ($request->routeIs('admin.login.store')) {
             if ($request->user()->is_platform_admin) {
-                return redirect()->intended(route('platform-admin.owner-registrations.index', absolute: false));
+                return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
             }
 
             if ($request->user()->memberships()->exists()) {
@@ -93,15 +93,15 @@ class AuthenticatedSessionController extends Controller
                 return $this->rejectAuthenticatedLogin($request, 'Your shop owner registration was rejected. Please contact the platform admin.');
             }
 
-            return $this->rejectAuthenticatedLogin($request, 'This account does not have shop owner access.');
+            return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
         }
 
         if ($request->user()->is_platform_admin) {
-            return $this->rejectAuthenticatedLogin($request, 'Please use Admin login for this account.');
+            return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
         }
 
         if ($request->user()->memberships()->exists() || $request->user()->owner_registration_status !== null) {
-            return $this->rejectAuthenticatedLogin($request, 'Please use Shop Owner login for this account.');
+            return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
         }
 
         $redirectRoute = $request->user()->memberships()->exists()

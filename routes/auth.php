@@ -24,10 +24,10 @@ Route::middleware('guest')->group(function () {
     Route::post('customer/register', [RegisteredUserController::class, 'store'])
         ->name('customer.register.store');
 
-    Route::get('admin/register', [RegisteredUserController::class, 'createAdmin'])
+    Route::get('shop-owner/register', [RegisteredUserController::class, 'createAdmin'])
         ->name('admin.register');
 
-    Route::post('admin/register', [RegisteredUserController::class, 'store'])
+    Route::post('shop-owner/register', [RegisteredUserController::class, 'store'])
         ->name('admin.register.store');
 
     Route::get('login', [AuthenticatedSessionController::class, 'createCustomer'])
@@ -42,10 +42,10 @@ Route::middleware('guest')->group(function () {
     Route::post('customer/login', [AuthenticatedSessionController::class, 'store'])
         ->name('customer.login.store');
 
-    Route::get('admin/login', [AuthenticatedSessionController::class, 'createAdmin'])
+    Route::get('shop-owner/login', [AuthenticatedSessionController::class, 'createAdmin'])
         ->name('admin.login');
 
-    Route::post('admin/login', [AuthenticatedSessionController::class, 'store'])
+    Route::post('shop-owner/login', [AuthenticatedSessionController::class, 'store'])
         ->name('admin.login.store');
 
     Route::get('platform-admin/login', [AuthenticatedSessionController::class, 'createPlatformAdmin'])

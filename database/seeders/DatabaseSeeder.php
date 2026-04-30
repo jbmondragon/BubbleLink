@@ -48,9 +48,9 @@ class DatabaseSeeder extends Seeder
             ['id' => 1, 'organization_id' => 1, 'name' => 'wash, dry, fold'],
             ['id' => 2, 'organization_id' => 1, 'name' => 'dry cleaning'],
             ['id' => 3, 'organization_id' => 1, 'name' => 'ironing only'],
-            ['id' => 4, 'organization_id' => 1, 'name' => 'full service'],
+            ['id' => 4, 'organization_id' => 1, 'name' => 'wash, dry, fold, iron'],
             ['id' => 5, 'organization_id' => 2, 'name' => 'wash, dry, fold'],
-            ['id' => 6, 'organization_id' => 2, 'name' => 'express steam'],
+            ['id' => 6, 'organization_id' => 2, 'name' => 'dry cleaning'],
         ]);
 
         \DB::table('shop_services')->insert([

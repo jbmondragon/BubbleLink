@@ -110,7 +110,7 @@
         ]))->values())
 
         <div
-            class="mb-6 bg-white shadow rounded-lg p-6"
+            class="mb-6 bg-blue-200 shadow rounded-lg p-6"
             x-data="{
                 selectedShopId: @js((string) old('shop_id')),
                 selectedShopServiceId: @js((string) old('shop_service_id')),
@@ -121,6 +121,7 @@
             }"
         >
             @php($orderCreateErrors = $errors->getBag('orderCreate'))
+            
             <div class="mb-4 flex items-center justify-between gap-4">
                 <div>
                     <h2 class="text-lg font-semibold">Create Order</h2>
@@ -277,7 +278,7 @@
                                             <x-input-error :messages="$orderErrors->get('status')" class="mt-2" />
                                         </td>
                                         <td class="px-4 py-3">
-                                            <select name="payment_status" form="order-update-{{ $order->id }}" class="rounded-md border-gray-300 shadow-sm text-sm">
+                                            <select name="payment_status" form="order-update-{{ $order->id }}" class="rounded-md border-gray-300 shadow-sm text-sm {{ $order->payment_status === 'paid' ? 'bg-green-200' : 'bg-red-200' }}">
                                                 @foreach(['unpaid', 'paid'] as $paymentStatus)
                                                     <option value="{{ $paymentStatus }}" @selected(($failedOrderId == $order->id ? old('payment_status', $order->payment_status ?? 'unpaid') : ($order->payment_status ?? 'unpaid')) === $paymentStatus)>
                                                         {{ ucfirst($paymentStatus) }}

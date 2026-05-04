@@ -1,65 +1,76 @@
 <x-guest-layout>
-    <div class="mb-6 space-y-2 text-center">
-        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">BubbleLink Access</p>
-        <h1 class="text-2xl font-semibold text-slate-900">{{ $heading ?? 'Customer login' }}</h1>
-        <p class="text-sm text-slate-600">{{ $description ?? 'Sign in to continue.' }}</p>
-        <div class="flex items-center justify-center gap-3 text-sm">
-            <a class="text-emerald-700 hover:text-emerald-900" href="{{ route($alternateLoginRoute ?? 'admin.login') }}">{{ $alternateLoginLabel ?? 'Shop Owner login' }}</a>
-            <span class="text-slate-300">|</span>
-            <a class="text-emerald-700 hover:text-emerald-900" href="{{ route($registerRoute ?? 'customer.register') }}">{{ $registerLabel ?? 'Create account' }}</a>
+
+    {{-- Login page that supports customer/owner access, shows links to alternate auth routes, and handles sign-in --}}
+
+    <div class="auth-intro">
+        <p class="auth-eyebrow">BubbleLink Access</p>
+        <h1 class="auth-title">{{ $heading ?? 'Customer login' }}</h1>
+        <p class="auth-copy">{{ $description ?? 'Sign in to continue.' }}</p>
+
+        <div class="auth-link-row">
+            <a class="auth-link" href="{{ route($alternateLoginRoute ?? 'admin.login') }}">
+                {{ $alternateLoginLabel ?? 'Shop Owner login' }}
+            </a>
+            <span>|</span>
+            <a class="auth-link" href="{{ route($registerRoute ?? 'customer.register') }}">
+                {{ $registerLabel ?? 'Create account' }}
+            </a>
         </div>
 
-        @if (request()->filled('demo_email'))
-            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                Demo credentials loaded for <span class="font-semibold">{{ request('demo_email') }}</span>.
-            </div>
-        @endif
     </div>
 
-    <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form method="POST" action="{{ route($formActionRoute ?? 'login.store') }}">
+    @if (request()->filled('demo_email'))
+        <div class="auth-banner mb-4">
+            Demo credentials loaded for {{ request('demo_email') }}.
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route($formActionRoute ?? 'login.store') }}" class="auth-form">
         @csrf
 
-        <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', request('demo_email'))" required autofocus autocomplete="username" />
+            <x-text-input id="email"
+                class="block mt-1 w-full"
+                type="email"
+                name="email"
+                :value="old('email', request('demo_email'))"
+                required
+                autofocus />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <!-- Password -->
-        <div class="mt-4">
+        <div>
             <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            :value="request('demo_password')"
-                            required autocomplete="current-password" />
-
+            <x-text-input id="password"
+                class="block mt-1 w-full"
+                type="password"
+                name="password"
+                :value="old('password', request('demo_password'))"
+                required />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+        <div>
+            <label>
+                <input type="checkbox" name="remember">
+                <span>{{ __('Remember me') }}</span>
             </label>
         </div>
 
-        <div class="flex items-center justify-end mt-4">
+        <div class="auth-actions">
             @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
+                <a href="{{ route('password.request') }}">
+                    {{ __('Forgot password?') }}
                 </a>
             @endif
 
-            <x-primary-button class="ms-3">
+            <x-primary-button>
                 {{ __('Log in') }}
             </x-primary-button>
         </div>
     </form>
+
 </x-guest-layout>

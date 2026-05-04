@@ -1,125 +1,100 @@
 # BubbleLink
 
-BubbleLink is a multi-portal laundry service platform built with Laravel 12. It connects customers with laundry shops and gives shop owners tools to manage their business.
+BubbleLink is a Laravel 12 laundry service platform with three live surfaces:
+customer browsing and ordering, direct shop-owner operations, and platform-admin
+approval of new shop owners.
 
----
+## Portals
 
-## How It Works
+| Portal         | URL                     | Purpose                                                        |
+| -------------- | ----------------------- | -------------------------------------------------------------- |
+| Customer       | `/customer/login`       | Browse shops, place orders, and review order history           |
+| Shop Owner     | `/shop-owner/login`     | Manage shops, fixed services, shop-service pricing, and orders |
+| Platform Admin | `/platform-admin/login` | Review and approve or reject shop owner registrations          |
 
-The platform has three separate user portals:
+Each portal has its own entry route, but the app now uses a simpler runtime model:
+shop owners act directly on their shops. The old organization, membership, guided
+setup, and welcome-page flows are no longer part of the live app experience.
 
-| Portal         | URL                     | Purpose                                                 |
-| -------------- | ----------------------- | ------------------------------------------------------- |
-| Customer       | `/customer/login`       | Browse shops, place and track orders                    |
-| Shop Owner     | `/shop-owner/login`     | Manage organization, shops, services, staff, and orders |
-| Platform Admin | `/platform-admin/login` | Review and approve shop owner registrations             |
-
-Each portal is isolated — accounts can only log in through their designated portal.
-
----
+Default customer auth is also available at `/login` and `/register`.
 
 ## Requirements
 
 - PHP 8.2+
 - Composer
-- Node.js & npm
-- MySQL (or any Laravel-supported database)
+- Node.js and npm
+- MySQL or another Laravel-supported database
 
----
-
-## Setup
+## Local Setup
 
 ```bash
-# 1. Install PHP dependencies
 composer install
-
-# 2. Copy environment file
 cp .env.example .env
-
-# 3. Generate application key
 php artisan key:generate
-
-# 4. Configure your database in .env
-# DB_DATABASE=bubblelink
-# DB_USERNAME=root
-# DB_PASSWORD=
-
-# 5. Run migrations
 php artisan migrate
-
-# 6. Seed sample data
 php artisan db:seed
-
-# 7. Install and build frontend assets
 npm install
 npm run build
-
-# 8. Start the development server
 php artisan serve
 ```
 
-> **Windows / PowerShell users:** Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` before running npm commands if you encounter a script execution error.
+Windows PowerShell note:
+use `npm.cmd run build` if PowerShell blocks `npm.ps1`.
 
----
+## Seed Data
 
-## Seeded Test Accounts
+The database seeder currently creates one compact demo graph:
 
-All accounts use the password: **`password`**
+- shop owner: `john@example.com` / `password`
+- customer: `bob@example.com` / `password`
+- platform admin: `admin@bubblelink.test` / `password`
+- one owner shop with one priced service and one sample order
 
-| Name          | Email                 | Role                             |
-| ------------- | --------------------- | -------------------------------- |
-| System Admin  | admin@bubblelink.test | Platform Admin                   |
-| John Doe      | john@example.com      | Shop Owner (QuickClean Laundry)  |
-| Jane Owner    | jane@example.com      | Shop Owner (FreshFold Laundry)   |
-| Alice Manager | alice@example.com     | Shop Manager (QuickClean Manila) |
-| Mark Staff    | mark@example.com      | Staff (FreshFold Davao)          |
-| Bob Customer  | bob@example.com       | Customer                         |
-| Mia Customer  | mia@example.com       | Customer                         |
+## Live Functional Scope
 
----
+### Customer
 
-## Functionalities
+- browse public shop listings
+- view shop details and available services
+- place orders using pickup, delivery, both, or walk-in
+- review order history and order details
+- access order history from the top navigation while signed in
 
-### Customer Portal (`/customer/login`)
+### Shop Owner
 
-- Browse available laundry shops
-- View shop details and offered services
-- Place orders with service modes: pickup & delivery, pickup only, delivery only, or walk-in
-- Track order status and history
-- Rate completed orders
+- create and edit shops
+- work from a fixed per-shop service catalog
+- assign and remove shop-service pricing
+- review incoming orders
+- create internal orders
+- update order status, weight, and payment state
 
-### Shop Owner Portal (`/shop-owner/login`)
+### Platform Admin
 
-> Requires an approved shop owner account. New registrations are reviewed by the Platform Admin before access is granted.
+- review pending shop owner registrations
+- approve or reject requests
+- create an audit trail of approval decisions
+- notify owners about approval outcomes
 
-- **Setup Wizard** — Create your organization, add shops, define services, and invite staff on first login
-- **Organization Management** — Switch between organizations if you belong to multiple
-- **Shop Management** — Create, edit, and delete shops
-- **Service Management** — Define services scoped to your organization
-- **Shop Services** — Assign services to specific shops with custom pricing
-- **Staff & Memberships** — Add or remove staff members and assign them to shops
-- **Order Management** — View incoming orders and update their status
+## Auth Flow
 
-### Platform Admin Portal (`/platform-admin/login`)
+- customer registration and login are available through customer routes
+- shop owner registration captures first-shop details during registration
+- platform admin approval unlocks the owner workspace
+- approved owners go directly to the business dashboard
+- Breeze password reset, email verification, and profile management remain active
 
-- View all pending shop owner registration requests
-- Approve or reject registrations
-- Approved owners are notified and can proceed to set up their organization
-
----
-
-## Running Tests
+## Verification Commands
 
 ```bash
 php artisan test --compact
+npm.cmd run build
 ```
 
----
-
-## Code Style
-
-After modifying PHP files, run Pint to enforce consistent formatting:
+Focused regression checks that match the current live flows:
 
 ```bash
-vendor/bin/pint --dirty
+php artisan test --compact --filter=CustomerOrderingTest
+php artisan test --compact --filter=OwnerDashboardTest
+php artisan test --compact --filter=OwnerAccountApprovalTest
 ```

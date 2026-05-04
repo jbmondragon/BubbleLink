@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+/**
+ * Handles customer-facing shop discovery, filtering, and shop detail
+ * rendering.
+ */
+
 use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,38 +17,37 @@ class CustomerShopController extends Controller
     {
         $search = trim((string) $request->string('search'));
 
-        $memberships = $request->user()?->memberships()->get(['organization_id', 'shop_id', 'role']) ?? collect();
-        $ownerOrganizationIds = $memberships->where('role', 'owner')->pluck('organization_id')->filter()->unique()->values();
-        $assignedShopIds = $memberships->whereIn('role', ['manager', 'staff'])->pluck('shop_id')->filter()->unique()->values();
-
         $shops = Shop::query()
-            ->with(['organization', 'shopServices.service'])
-            ->withCount(['orders as ratings_count' => fn ($query) => $query->whereNotNull('shop_rating')])
-            ->withAvg(['orders as average_rating' => fn ($query) => $query->whereNotNull('shop_rating')], 'shop_rating')
-            ->when($memberships->isNotEmpty(), function ($query) use ($ownerOrganizationIds, $assignedShopIds) {
-                $query->where(function ($builder) use ($ownerOrganizationIds, $assignedShopIds) {
-                    if ($ownerOrganizationIds->isNotEmpty()) {
-                        $builder->whereIn('organization_id', $ownerOrganizationIds);
-                    }
-
-                    if ($assignedShopIds->isNotEmpty()) {
-                        $method = $ownerOrganizationIds->isNotEmpty() ? 'orWhereIn' : 'whereIn';
-                        $builder->{$method}('id', $assignedShopIds);
-                    }
-                });
-            })
+            ->with(['shopServices.service'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($builder) use ($search) {
                     $builder->where('shop_name', 'like', '%'.$search.'%')
                         ->orWhere('address', 'like', '%'.$search.'%')
-                        ->orWhere('description', 'like', '%'.$search.'%');
+                        ->orWhere('description', 'like', '%'.$search.'%')
+                        ->orWhereHas('shopServices.service', function ($serviceQuery) use ($search) {
+                            $serviceQuery->where('name', 'like', '%'.$search.'%');
+                        });
                 });
             })
             ->orderBy('shop_name')
             ->get();
 
+        $shopCards = $shops->map(function (Shop $shop) {
+            $featuredServices = $shop->shopServices
+                ->sortBy(fn ($shopService) => $shopService->service->name)
+                ->take(3)
+                ->values();
+
+            return [
+                'shop' => $shop,
+                'serviceCount' => $shop->shopServices->count(),
+                'featuredServices' => $featuredServices,
+                'startingPrice' => $shop->shopServices->min('price'),
+            ];
+        });
+
         return view('customer.shops.index', [
-            'shops' => $shops,
+            'shopCards' => $shopCards,
             'search' => $search,
         ]);
     }
@@ -51,14 +55,21 @@ class CustomerShopController extends Controller
     public function show(Shop $shop): View
     {
         $shop = Shop::query()
-            ->with(['organization', 'shopServices.service'])
-            ->withCount(['orders as ratings_count' => fn ($query) => $query->whereNotNull('shop_rating')])
-            ->withAvg(['orders as average_rating' => fn ($query) => $query->whereNotNull('shop_rating')], 'shop_rating')
+            ->with(['shopServices.service'])
             ->findOrFail($shop->id);
+
+        $services = $shop->shopServices
+            ->sortBy(fn ($shopService) => $shopService->service->name)
+            ->values()
+            ->map(fn ($shopService) => [
+                'shopService' => $shopService,
+                'bookingSummary' => 'Available for pickup, delivery, or both',
+            ]);
 
         return view('customer.shops.show', [
             'shop' => $shop,
-            'services' => $shop->shopServices->sortBy(fn ($shopService) => $shopService->service->name)->values(),
+            'services' => $services,
+            'serviceCount' => $services->count(),
         ]);
     }
 }

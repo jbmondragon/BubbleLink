@@ -1,0 +1,162 @@
+@layer components {
+	.bubble {
+		animation: animateBubble var(--bubble-duration, 30s) linear infinite,
+			sideWays var(--bubble-drift-duration, 5.5s) ease-in-out infinite alternate;
+		background:
+			radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.24) 38%, rgba(97, 197, 184, 0.14) 68%, rgba(255, 255, 255, 0.04) 100%);
+		border: 1px solid rgba(255, 255, 255, 0.26);
+		border-radius: 9999px;
+		box-shadow:
+			0 16px 34px rgba(22, 78, 99, 0.06),
+			inset 0 12px 22px rgba(255, 255, 255, 0.28),
+			inset 0 -8px 14px rgba(255, 255, 255, 0.06);
+		height: var(--bubble-size, 12rem);
+		left: var(--bubble-left, 0%);
+		filter: blur(0.35px);
+		opacity: 0.34;
+		position: absolute;
+		top: var(--bubble-top, 100%);
+		width: var(--bubble-size, 12rem);
+		will-change: transform;
+	}
+
+	.bubble::after {
+		background: radial-gradient(circle at center, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0) 72%);
+		border-radius: inherit;
+		content: "";
+		inset: 12%;
+		position: absolute;
+	}
+
+	.x1 {
+		--bubble-size: 11rem;
+		--bubble-left: -4%;
+		--bubble-top: 90%;
+		--bubble-duration: 28s;
+		--bubble-drift-duration: 3s;
+		--bubble-scale: 0.62;
+	}
+
+	.x2 {
+		--bubble-size: 9rem;
+		--bubble-left: 6%;
+		--bubble-top: 82%;
+		--bubble-duration: 23s;
+		--bubble-drift-duration: 4.5s;
+		--bubble-scale: 0.42;
+	}
+
+	.x3 {
+		--bubble-size: 13rem;
+		--bubble-left: 11%;
+		--bubble-top: 48%;
+		--bubble-duration: 31s;
+		--bubble-drift-duration: 3.4s;
+		--bubble-scale: 0.7;
+	}
+
+	.x4 {
+		--bubble-size: 8rem;
+		--bubble-left: 21%;
+		--bubble-top: 6%;
+		--bubble-duration: 25s;
+		--bubble-drift-duration: 3.8s;
+		--bubble-scale: 0.34;
+	}
+
+	.x5 {
+		--bubble-size: 10rem;
+		--bubble-left: 31%;
+		--bubble-top: 62%;
+		--bubble-duration: 32s;
+		--bubble-drift-duration: 4.8s;
+		--bubble-scale: 0.54;
+	}
+
+	.x6 {
+		--bubble-size: 14rem;
+		--bubble-left: 49%;
+		--bubble-top: 8%;
+		--bubble-duration: 26s;
+		--bubble-drift-duration: 3.1s;
+		--bubble-scale: 0.78;
+	}
+
+	.x7 {
+		--bubble-size: 9rem;
+		--bubble-left: 64%;
+		--bubble-top: 74%;
+		--bubble-duration: 24s;
+		--bubble-drift-duration: 3.2s;
+		--bubble-scale: 0.44;
+	}
+
+	.x8 {
+		--bubble-size: 8rem;
+		--bubble-left: 79%;
+		--bubble-top: 16%;
+		--bubble-duration: 29s;
+		--bubble-drift-duration: 4.1s;
+		--bubble-scale: 0.3;
+	}
+
+	.x9 {
+		--bubble-size: 12rem;
+		--bubble-left: 89%;
+		--bubble-top: 58%;
+		--bubble-duration: 34s;
+		--bubble-drift-duration: 5s;
+		--bubble-scale: 0.58;
+	}
+
+	.x10 {
+		--bubble-size: 8.5rem;
+		--bubble-left: 82%;
+		--bubble-top: 86%;
+		--bubble-duration: 31s;
+		--bubble-drift-duration: 3.3s;
+		--bubble-scale: 0.32;
+	}
+}
+
+@keyframes animateBubble {
+	0% {
+		transform: translate3d(0, 100vh, 0) scale(var(--bubble-scale, 1));
+	}
+
+	100% {
+		transform: translate3d(0, -130vh, 0) scale(var(--bubble-scale, 1));
+	}
+}
+
+@keyframes sideWays {
+	0% {
+		margin-left: 0;
+	}
+
+	100% {
+		margin-left: 3rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bubble {
+		animation: none;
+		opacity: 0.16;
+	}
+}
+
+@media (max-width: 640px) {
+	#background-wrap .x3,
+	#background-wrap .x6,
+	#background-wrap .x8,
+	#background-wrap .x9,
+	#background-wrap .x10 {
+		display: none;
+	}
+
+	.bubble {
+		filter: blur(0.75px);
+		opacity: 0.26;
+	}
+}

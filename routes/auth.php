@@ -1,5 +1,36 @@
 <?php
 
+/**
+ * Authentication & Authorization Routes
+ *
+ * This file defines all authentication-related routes for the application,
+ * including registration, login, password reset, email verification, and logout.
+ *
+ * The routes are grouped by middleware:
+ *
+ * - "guest" middleware:
+ *   Handles unauthenticated user actions such as:
+ *   - Customer/Admin/Platform Admin registration
+ *   - Login for different user roles
+ *   - Password reset (request and submission)
+ *
+ * - "auth" middleware:
+ *   Handles authenticated user actions such as:
+ *   - Email verification flow
+ *   - Password confirmation and update
+ *   - Logout functionality
+ *
+ * Multi-role support is implemented (Customer, Shop Owner/Admin, Platform Admin),
+ * each with dedicated login and registration endpoints to support role-based access control.
+ *
+ * Note:
+ * - Ensure route names remain consistent when used in frontend or API integrations.
+ * - Throttle middleware is applied to sensitive endpoints (verification, reset) for security.
+ * - Signed routes are used for email verification integrity.
+ *
+ * This structure is designed for scalability and separation of concerns in production environments.
+ */
+
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -11,48 +42,21 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'createCustomer'])
-        ->name('register');
+$registerGuestAuthRoute = function (string $uri, array|string|callable|null $getAction, string $name): void {
+    Route::get($uri, $getAction)->name($name);
+    Route::post($uri, [str_contains($name, 'register') ? RegisteredUserController::class : AuthenticatedSessionController::class, 'store'])
+        ->name("{$name}.store");
+};
 
-    Route::post('register', [RegisteredUserController::class, 'store'])
-        ->name('register.store');
+Route::middleware('guest')->group(function () use ($registerGuestAuthRoute) {
+    $registerGuestAuthRoute('register', [RegisteredUserController::class, 'createCustomer'], 'register');
+    $registerGuestAuthRoute('customer/register', [RegisteredUserController::class, 'createCustomer'], 'customer.register');
+    $registerGuestAuthRoute('shop-owner/register', [RegisteredUserController::class, 'createAdmin'], 'admin.register');
 
-    Route::get('customer/register', [RegisteredUserController::class, 'createCustomer'])
-        ->name('customer.register');
-
-    Route::post('customer/register', [RegisteredUserController::class, 'store'])
-        ->name('customer.register.store');
-
-    Route::get('shop-owner/register', [RegisteredUserController::class, 'createAdmin'])
-        ->name('admin.register');
-
-    Route::post('shop-owner/register', [RegisteredUserController::class, 'store'])
-        ->name('admin.register.store');
-
-    Route::get('login', [AuthenticatedSessionController::class, 'createCustomer'])
-        ->name('login');
-
-    Route::post('login', [AuthenticatedSessionController::class, 'store'])
-        ->name('login.store');
-
-    Route::get('customer/login', [AuthenticatedSessionController::class, 'createCustomer'])
-        ->name('customer.login');
-
-    Route::post('customer/login', [AuthenticatedSessionController::class, 'store'])
-        ->name('customer.login.store');
-
-    Route::get('shop-owner/login', [AuthenticatedSessionController::class, 'createAdmin'])
-        ->name('admin.login');
-
-    Route::post('shop-owner/login', [AuthenticatedSessionController::class, 'store'])
-        ->name('admin.login.store');
-
-    Route::get('platform-admin/login', [AuthenticatedSessionController::class, 'createPlatformAdmin'])
-        ->name('platform-admin.login');
-
-    Route::post('platform-admin/login', [AuthenticatedSessionController::class, 'store'])
-        ->name('platform-admin.login.store');
+    $registerGuestAuthRoute('login', [AuthenticatedSessionController::class, 'createCustomer'], 'login');
+    $registerGuestAuthRoute('customer/login', [AuthenticatedSessionController::class, 'createCustomer'], 'customer.login');
+    $registerGuestAuthRoute('shop-owner/login', [AuthenticatedSessionController::class, 'createAdmin'], 'admin.login');
+    $registerGuestAuthRoute('platform-admin/login', [AuthenticatedSessionController::class, 'createPlatformAdmin'], 'platform-admin.login');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');

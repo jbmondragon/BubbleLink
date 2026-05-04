@@ -29,7 +29,8 @@ class ShopOwnerRegistrationApprovedNotification extends Notification
             ->subject('Your shop owner account has been approved')
             ->greeting('Hello '.$notifiable->name.',')
             ->line('Your shop owner registration has been approved by the platform admin.')
-            ->line('You can now sign in and create your organization to start managing your laundry business.')
+            ->line('Your first shop profile has been prepared from the registration details you submitted.')
+            ->line('You can now sign in to manage services and orders for your laundry business.')
             ->action('Sign in as Shop Owner', route('admin.login'))
             ->line('If you did not request this account, please contact support.');
     }

@@ -2,6 +2,53 @@
 
 namespace App\Http\Controllers;
 
+/**
+ * Customer Order Controller
+ *
+ * Handles all customer-side order workflows including:
+ * order creation, order listing, order details viewing, and rating submission.
+ *
+ * Responsibilities:
+ *
+ * 1. Order Creation (create & store):
+ *    - Displays shop-specific service selection form
+ *    - Validates service availability within the selected shop
+ *    - Applies conditional validation rules based on service mode:
+ *        - pickup_only, delivery_only, both, walk_in
+ *    - Determines required fields dynamically (pickup/delivery details)
+ *    - Creates a new order with default "pending" and "unpaid" status
+ *    - Computes total price from selected shop service (server-side trusted source)
+ *
+ * 2. Order Listing (index):
+ *    - Retrieves authenticated customer’s order history
+ *    - Eager loads related shop and service data
+ *    - Provides summary statistics:
+ *        - Total orders
+ *        - Pending orders
+ *        - Completed orders
+ *
+ * 3. Order Details (show):
+ *    - Displays a single order with full relational context
+ *    - Ensures authorization via policy (view access control)
+ *    - Loads associated shop and service information
+ *
+ * 4. Order Rating (rate):
+ *    - Allows customers to submit a 1–5 rating for a completed order
+ *    - Enforces authorization via policy (rate access control)
+ *    - Stores rating value and timestamp for tracking and analytics
+ *
+ * Security & Integrity:
+ * - Ensures only valid customers can access all endpoints via ensureCustomer()
+ * - Uses Laravel Gate policies for per-order authorization (view/rate)
+ * - Prevents cross-shop service assignment through strict validation checks
+ * - Trusts server-side service pricing to prevent client manipulation
+ *
+ * Design Notes:
+ * - Centralizes customer order lifecycle operations in a single controller
+ * - Uses eager loading to minimize query overhead
+ * - Separates authorization concerns (policies) from business logic
+ */
+
 use App\Models\Order;
 use App\Models\Shop;
 use App\Models\ShopService;
@@ -17,7 +64,7 @@ class CustomerOrderController extends Controller
     {
         $this->ensureCustomer($request);
 
-        $shop->load(['organization', 'shopServices.service']);
+        $shop->load(['shopServices.service']);
 
         abort_if($shop->shopServices->isEmpty(), 404);
 
@@ -77,12 +124,15 @@ class CustomerOrderController extends Controller
 
         $orders = $request->user()
             ->orders()
-            ->with(['shop.organization', 'shopService.service'])
+            ->with(['shop', 'shopService.service'])
             ->latest('id')
             ->get();
 
         return view('customer.orders.index', [
             'orders' => $orders,
+            'totalOrderCount' => $orders->count(),
+            'pendingOrderCount' => $orders->where('status', 'pending')->count(),
+            'completedOrderCount' => $orders->where('status', 'completed')->count(),
         ]);
     }
 
@@ -110,7 +160,7 @@ class CustomerOrderController extends Controller
         $this->ensureCustomer($request);
         Gate::authorize('view', $order);
 
-        $order->load(['shop.organization', 'shopService.service']);
+        $order->load(['shop', 'shopService.service']);
 
         return view('customer.orders.show', [
             'order' => $order,

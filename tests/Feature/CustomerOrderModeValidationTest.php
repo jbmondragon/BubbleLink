@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Order;
-use App\Models\Organization;
 use App\Models\Service;
 use App\Models\Shop;
 use App\Models\ShopService;
@@ -9,15 +8,12 @@ use App\Models\User;
 
 function createCustomerOrderModeContext(): array
 {
-    $owner = User::factory()->create();
-
-    $organization = Organization::create([
-        'name' => 'Seafoam Laundry',
-        'owner_user_id' => $owner->id,
+    $owner = User::factory()->create([
+        'owner_registration_status' => 'approved',
     ]);
 
     $shop = Shop::create([
-        'organization_id' => $organization->id,
+        'owner_user_id' => $owner->id,
         'shop_name' => 'Seafoam Makati',
         'address' => '42 Dela Rosa Street, Makati',
         'contact_number' => '09171234567',
@@ -25,7 +21,7 @@ function createCustomerOrderModeContext(): array
     ]);
 
     $service = Service::create([
-        'organization_id' => $organization->id,
+        'shop_id' => $shop->id,
         'name' => 'Wash and Fold',
     ]);
 

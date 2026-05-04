@@ -7,6 +7,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+/**
+ * Displays the email verification prompt when the current user has not yet
+ * verified their address.
+ */
 class EmailVerificationPromptController extends Controller
 {
     /**

@@ -1,8 +1,6 @@
 <?php
 
-use App\Models\Membership;
 use App\Models\Order;
-use App\Models\Organization;
 use App\Models\Service;
 use App\Models\Shop;
 use App\Models\ShopService;
@@ -10,21 +8,12 @@ use App\Models\User;
 
 function createCustomerOrderingContext(): array
 {
-    $owner = User::factory()->create();
-
-    $organization = Organization::create([
-        'name' => 'QuickClean Laundry',
-        'owner_user_id' => $owner->id,
-    ]);
-
-    Membership::create([
-        'user_id' => $owner->id,
-        'organization_id' => $organization->id,
-        'role' => 'owner',
+    $owner = User::factory()->create([
+        'owner_registration_status' => 'approved',
     ]);
 
     $shop = Shop::create([
-        'organization_id' => $organization->id,
+        'owner_user_id' => $owner->id,
         'shop_name' => 'QuickClean Manila',
         'address' => '123 Sampaloc Street, Manila',
         'contact_number' => '09123456789',
@@ -32,7 +21,7 @@ function createCustomerOrderingContext(): array
     ]);
 
     $service = Service::create([
-        'organization_id' => $organization->id,
+        'shop_id' => $shop->id,
         'name' => 'Wash, Dry, Fold',
     ]);
 
@@ -42,7 +31,7 @@ function createCustomerOrderingContext(): array
         'price' => 180.00,
     ]);
 
-    return compact('owner', 'organization', 'shop', 'service', 'shopService');
+    return compact('owner', 'shop', 'service', 'shopService');
 }
 
 test('guests can browse shops and view shop details', function () {
@@ -51,7 +40,6 @@ test('guests can browse shops and view shop details', function () {
     $this->get(route('customer.shops.index'))
         ->assertOk()
         ->assertSee('QuickClean Manila')
-        ->assertSee('QuickClean Laundry')
         ->assertSee('Customer Login')
         ->assertSee('Shop Owner Login')
         ->assertSee('Admin Login')
@@ -63,7 +51,7 @@ test('guests can browse shops and view shop details', function () {
         ->assertSee('Log in to order');
 });
 
-test('authenticated customers can browse shops without memberships', function () {
+test('authenticated customers can browse the owner-managed shop catalog', function () {
     createCustomerOrderingContext();
     $customer = User::factory()->create();
 
@@ -71,7 +59,41 @@ test('authenticated customers can browse shops without memberships', function ()
         ->get(route('customer.shops.index'))
         ->assertOk()
         ->assertSee('Find a shop near you')
-        ->assertSee('My Orders');
+        ->assertSee('My Orders')
+        ->assertSee('Order history');
+});
+
+test('shop search matches offered service names', function () {
+    $context = createCustomerOrderingContext();
+
+    $otherOwner = User::factory()->create([
+        'owner_registration_status' => 'approved',
+    ]);
+
+    $otherShop = Shop::create([
+        'owner_user_id' => $otherOwner->id,
+        'shop_name' => 'Pressed Daily',
+        'address' => '88 Quezon Avenue, Quezon City',
+        'contact_number' => '09991112222',
+        'description' => 'Focused on garment pressing.',
+    ]);
+
+    $otherService = Service::create([
+        'shop_id' => $otherShop->id,
+        'name' => 'Ironing Only',
+    ]);
+
+    ShopService::create([
+        'shop_id' => $otherShop->id,
+        'service_id' => $otherService->id,
+        'price' => 120.00,
+    ]);
+
+    $this->get(route('customer.shops.index', ['search' => 'ironing']))
+        ->assertOk()
+        ->assertSee('Pressed Daily')
+        ->assertSee('Ironing Only')
+        ->assertDontSee($context['shop']->shop_name);
 });
 
 test('authenticated customers can place orders and view them', function () {
@@ -127,30 +149,7 @@ test('non customer accounts can not access customer ordering routes', function (
     $approvedOwner = User::factory()->create([
         'owner_registration_status' => 'approved',
     ]);
-    $manager = User::factory()->create();
-    $staff = User::factory()->create();
-
-    Membership::create([
-        'user_id' => $approvedOwner->id,
-        'organization_id' => $context['organization']->id,
-        'role' => 'owner',
-    ]);
-
-    Membership::create([
-        'user_id' => $manager->id,
-        'organization_id' => $context['organization']->id,
-        'shop_id' => $context['shop']->id,
-        'role' => 'manager',
-    ]);
-
-    Membership::create([
-        'user_id' => $staff->id,
-        'organization_id' => $context['organization']->id,
-        'shop_id' => $context['shop']->id,
-        'role' => 'staff',
-    ]);
-
-    foreach ([$platformAdmin, $approvedOwner, $manager, $staff] as $user) {
+    foreach ([$platformAdmin, $approvedOwner] as $user) {
         $this->actingAs($user)
             ->get(route('customer.orders.create', $context['shop']))
             ->assertForbidden();
@@ -194,7 +193,7 @@ test('customers can only view their own orders', function () {
         ->assertForbidden();
 });
 
-test('customers can rate completed orders and shop pages show the rating summary', function () {
+test('completed orders no longer show rating controls or shop rating summaries', function () {
     $context = createCustomerOrderingContext();
     $customer = User::factory()->create();
 
@@ -212,41 +211,33 @@ test('customers can rate completed orders and shop pages show the rating summary
         'status' => 'completed',
         'payment_method' => null,
         'payment_status' => 'paid',
-    ]);
-
-    $this->actingAs($customer)
-        ->patch(route('customer.orders.rate', $order), [
-            'shop_rating' => 5,
-        ])
-        ->assertRedirect(route('customer.orders.show', $order));
-
-    $this->assertDatabaseHas('orders', [
-        'id' => $order->id,
         'shop_rating' => 5,
     ]);
 
     $this->actingAs($customer)
         ->get(route('customer.orders.show', $order))
         ->assertOk()
-        ->assertSee('Edit rating')
-        ->assertSee('Current rating:')
-        ->assertSee('5/5');
+        ->assertDontSee('Rate shop')
+        ->assertDontSee('Edit rating')
+        ->assertDontSee('Current rating:')
+        ->assertDontSee('5/5');
 
     $this->actingAs($customer)
         ->get(route('customer.orders.index'))
         ->assertOk()
-        ->assertSee('Edit rating')
-        ->assertSee('Rated 5/5');
+        ->assertDontSee('Rate shop')
+        ->assertDontSee('Edit rating')
+        ->assertDontSee('Rated 5/5');
 
     $this->actingAs($customer)
         ->get(route('customer.shops.show', $context['shop']))
         ->assertOk()
-        ->assertSee('Customer rating')
-        ->assertSee('5.0 / 5 from 1 rating');
+        ->assertDontSee('Customer rating')
+        ->assertDontSee('5.0 / 5 from 1 rating');
 
     $this->actingAs($customer)
         ->get(route('customer.shops.index'))
         ->assertOk()
-        ->assertSee('5.0 / 5')
-        ->assertSee('1 rating');
+        ->assertDontSee('5.0 / 5')
+        ->assertDontSee('1 rating');
 });

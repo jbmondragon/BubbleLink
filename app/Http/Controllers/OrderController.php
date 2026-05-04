@@ -17,20 +17,12 @@ class OrderController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        $organization = $this->currentOrganization($request);
-        $membership = $this->currentMembership($request);
-        $currentRole = $this->currentRole($request);
+        $shops = $this->ownerShops($request)->get();
 
-        if (! $organization) {
+        if ($shops->isEmpty()) {
             return redirect()
-                ->route('organizations.create')
-                ->with('warning', 'Create your organization first to manage orders.');
-        }
-
-        if (! in_array($currentRole, ['manager', 'staff'], true)) {
-            return redirect()
-                ->route('dashboard')
-                ->with('warning', 'Only managers and staff can manage orders. Owners can view order totals from the dashboard.');
+                ->route('shops.create')
+                ->with('warning', 'Create your first shop before managing orders.');
         }
 
         $selectedShopId = trim((string) $request->string('shop_id'));
@@ -59,15 +51,11 @@ class OrderController extends Controller
             $toDate = '';
         }
 
-        $shops = $organization->shops()
-            ->when($currentRole !== 'owner', fn ($query) => $query->whereKey($membership?->shop_id ?? 0))
-            ->with('shopServices.service')
-            ->orderBy('shop_name')
-            ->get();
+        $shopIds = $shops->pluck('id');
 
-        $orderShops = $organization->shops()
-            ->when($currentRole !== 'owner', fn ($query) => $query->whereKey($membership?->shop_id ?? 0))
+        $orderShops = Shop::whereIn('id', $shopIds)
             ->when($selectedShopId !== '', fn ($query) => $query->whereKey($selectedShopId))
+            ->with('shopServices.service')
             ->with([
                 'orders' => fn ($query) => $this->applyOrderFilters($query, $statusFilter, $paymentStatusFilter, $fromDate, $toDate)
                     ->with(['customer', 'shopService.service'])
@@ -83,9 +71,6 @@ class OrderController extends Controller
         $displayedOrders = $orderShops->flatMap->orders;
 
         return view('orders.index', [
-            'organization' => $organization,
-            'currentMembership' => $membership,
-            'currentRole' => $currentRole,
             'shops' => $shops,
             'orderShops' => $orderShops,
             'selectedShopId' => $selectedShopId,
@@ -104,45 +89,27 @@ class OrderController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $organization = $this->currentOrganization($request);
-        $membership = $this->currentMembership($request);
-        $currentRole = $this->currentRole($request);
-
-        if (! $organization) {
-            return redirect()
-                ->route('organizations.create')
-                ->with('warning', 'Create your organization first to manage orders.');
-        }
-
-        if (! in_array($currentRole, ['manager', 'staff'], true)) {
-            return redirect()
-                ->route('dashboard')
-                ->with('warning', 'Only managers and staff can create orders. Owners can view order totals from the dashboard.');
-        }
-
-        abort_unless($membership?->shop_id, 403);
-
         $validated = $request->validateWithBag('orderCreate', [
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'required|email|max:255',
             'customer_contact_number' => 'nullable|string|max:255',
-            'shop_id' => 'required|exists:shops,id',
+            'shop_id' => [
+                'required',
+                Rule::exists('shops', 'id')->where(fn ($query) => $query->where('owner_user_id', $request->user()->id)),
+            ],
             'shop_service_id' => [
                 'required',
                 Rule::exists('shop_services', 'id')->where(fn ($query) => $query->where('shop_id', $request->integer('shop_id'))),
             ],
-            'service_mode' => 'required|in:pickup_only,delivery_only,both,walk_in',
-            'pickup_address' => 'nullable|required_if:service_mode,pickup_only,both|string|max:255',
-            'delivery_address' => 'nullable|required_if:service_mode,delivery_only,both|string|max:255',
+            'service_mode' => 'required|in:walk_in,delivery_only',
+            'delivery_address' => 'nullable|required_if:service_mode,delivery_only|string|max:255',
             'weight' => 'nullable|numeric|min:0',
-            'pickup_datetime' => 'nullable|required_if:service_mode,pickup_only,both|date',
-            'delivery_datetime' => 'nullable|required_if:service_mode,delivery_only,both|date',
+            'delivery_datetime' => 'nullable|required_if:service_mode,delivery_only|date',
             'payment_method' => 'nullable|in:gcash,cash',
             'payment_status' => 'nullable|in:paid,unpaid',
         ]);
 
-        $requiresPickup = in_array($validated['service_mode'], ['pickup_only', 'both'], true);
-        $requiresDelivery = in_array($validated['service_mode'], ['delivery_only', 'both'], true);
+        $requiresDelivery = $validated['service_mode'] === 'delivery_only';
 
         $shop = Shop::query()->findOrFail($validated['shop_id']);
         $shopService = ShopService::query()->with('shop')->findOrFail($validated['shop_service_id']);
@@ -169,10 +136,10 @@ class OrderController extends Controller
             'shop_id' => $shop->id,
             'shop_service_id' => $shopService->id,
             'service_mode' => $validated['service_mode'],
-            'pickup_address' => $requiresPickup ? ($validated['pickup_address'] ?? null) : null,
+            'pickup_address' => null,
             'delivery_address' => $requiresDelivery ? ($validated['delivery_address'] ?? null) : null,
             'weight' => $validated['weight'] ?? null,
-            'pickup_datetime' => $requiresPickup ? ($validated['pickup_datetime'] ?? null) : null,
+            'pickup_datetime' => null,
             'delivery_datetime' => $requiresDelivery ? ($validated['delivery_datetime'] ?? null) : null,
             'total_price' => $shopService->price,
             'status' => 'pending',

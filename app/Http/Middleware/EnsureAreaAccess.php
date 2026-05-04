@@ -22,18 +22,14 @@ class EnsureAreaAccess
             abort(403);
         }
 
-        $hasMemberships = $user->memberships()->exists();
+        $hasShops = $user->shops()->exists();
         $isApprovedShopOwner = $user->isApprovedShopOwnerRegistration();
 
         $authorized = match ($area) {
-            'customer' => ! $user->is_platform_admin && ! $hasMemberships && $user->owner_registration_status === null,
+            'customer' => ! $user->is_platform_admin && $user->owner_registration_status === null,
             'platform-admin' => $user->is_platform_admin,
-            'business' => ! $user->is_platform_admin && ($hasMemberships || $isApprovedShopOwner),
-            'dashboard' => $user->is_platform_admin || (! $user->is_platform_admin && ($hasMemberships || $isApprovedShopOwner)),
-            'organization-creator' => ! $user->is_platform_admin && (
-                $user->memberships()->where('role', 'owner')->exists()
-                || ($isApprovedShopOwner && ! $hasMemberships)
-            ),
+            'business' => ! $user->is_platform_admin && ($hasShops || $isApprovedShopOwner),
+            'dashboard' => $user->is_platform_admin || (! $user->is_platform_admin && ($hasShops || $isApprovedShopOwner)),
             default => throw new InvalidArgumentException('Unknown area access middleware segment ['.$area.'].'),
         };
 

@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Resends verification emails for authenticated users who still need to verify
+ * their email address.
+ */
 class EmailVerificationNotificationController extends Controller
 {
     /**

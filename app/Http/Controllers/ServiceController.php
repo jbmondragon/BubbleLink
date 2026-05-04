@@ -3,81 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Service;
+use App\Models\Shop;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ServiceController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        $organization = $this->currentOrganization($request);
-        $membership = $this->currentMembership($request);
-        $currentRole = $this->currentRole($request);
+        $shops = $this->ownerShops($request)->with('shopServices.service')->get();
 
-        if (! $organization) {
+        if ($shops->isEmpty()) {
             return redirect()
-                ->route('organizations.create')
-                ->with('warning', 'Create your organization first to manage services.');
+                ->route('shops.create')
+                ->with('warning', 'Create your first shop before managing services.');
         }
 
-        if ($currentRole !== 'manager') {
-            return redirect()
-                ->route('dashboard')
-                ->with('warning', 'Only managers can manage services. Owners can manage shops and member roles from the dashboard.');
-        }
+        $shops->each(fn (Shop $shop) => Service::ensureDefaultServicesForShop($shop));
 
-        $shops = $organization->shops()
-            ->whereKey($membership?->shop_id ?? 0)
-            ->with('shopServices.service')
+        $services = Service::whereIn('shop_id', $shops->pluck('id'))
+            ->orderBy('name')
             ->get();
 
         return view('services.index', [
-            'organization' => $organization,
-            'currentMembership' => $membership,
-            'currentRole' => $currentRole,
             'shops' => $shops,
-            'services' => $organization->services()->orderBy('name')->get(),
+            'services' => $services,
         ]);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $organization = $this->currentOrganization($request);
-        $membership = $this->currentMembership($request);
-        $currentRole = $this->currentRole($request);
-
-        if (! $organization) {
-            return redirect()
-                ->route('organizations.create')
-                ->with('warning', 'Create your organization first to manage services.');
-        }
-
-        if ($currentRole !== 'manager') {
-            return redirect()
-                ->route('dashboard')
-                ->with('warning', 'Only managers can manage services. Owners can manage shops and member roles from the dashboard.');
-        }
-
-        abort_unless($membership?->shop_id, 403);
-
-        $validated = $request->validateWithBag('serviceCreate', [
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('services', 'name')->where(
-                    fn ($query) => $query->where('organization_id', $organization->id)
-                ),
-            ],
-        ]);
-
-        Service::create([
-            ...$validated,
-            'organization_id' => $organization->id,
-        ]);
-
-        return redirect()->route('services.index')->with('success', 'Service created!');
     }
 }

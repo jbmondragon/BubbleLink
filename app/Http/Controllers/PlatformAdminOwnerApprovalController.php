@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\OwnerRegistrationReview;
+use App\Models\Shop;
 use App\Models\User;
 use App\Notifications\ShopOwnerRegistrationApprovedNotification;
 use App\Notifications\ShopOwnerRegistrationRejectedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class PlatformAdminOwnerApprovalController extends Controller
@@ -40,7 +42,11 @@ class PlatformAdminOwnerApprovalController extends Controller
         $this->ensurePlatformAdmin($request);
         $this->ensureReviewableOwnerRegistration($user);
 
-        $this->recordDecision($request->user(), $user, 'approved');
+        DB::transaction(function () use ($request, $user): void {
+            $this->recordDecision($request->user(), $user, 'approved');
+            $this->createApprovedOwnerShop($user);
+        });
+
         $user->notify(new ShopOwnerRegistrationApprovedNotification);
 
         return redirect()
@@ -89,5 +95,27 @@ class PlatformAdminOwnerApprovalController extends Controller
             'previous_status' => $previousStatus,
             'new_status' => $newStatus,
         ]);
+    }
+
+    private function createApprovedOwnerShop(User $shopOwner): void
+    {
+        if ($shopOwner->shops()->exists() || blank($shopOwner->pending_shop_name) || blank($shopOwner->pending_shop_address)) {
+            return;
+        }
+
+        Shop::create([
+            'owner_user_id' => $shopOwner->id,
+            'shop_name' => $shopOwner->pending_shop_name,
+            'address' => $shopOwner->pending_shop_address,
+            'contact_number' => $shopOwner->pending_shop_contact_number,
+            'description' => $shopOwner->pending_shop_description,
+        ]);
+
+        $shopOwner->forceFill([
+            'pending_shop_name' => null,
+            'pending_shop_address' => null,
+            'pending_shop_contact_number' => null,
+            'pending_shop_description' => null,
+        ])->save();
     }
 }

@@ -31,6 +31,10 @@ class User extends Authenticatable
         'owner_registration_status',
         'approved_by_user_id',
         'owner_registration_reviewed_at',
+        'pending_shop_name',
+        'pending_shop_address',
+        'pending_shop_contact_number',
+        'pending_shop_description',
     ];
 
     /**
@@ -62,14 +66,9 @@ class User extends Authenticatable
         return $this->belongsTo(self::class, 'approved_by_user_id');
     }
 
-    public function ownedOrganizations(): HasMany
+    public function shops(): HasMany
     {
-        return $this->hasMany(Organization::class, 'owner_user_id');
-    }
-
-    public function memberships(): HasMany
-    {
-        return $this->hasMany(Membership::class);
+        return $this->hasMany(Shop::class, 'owner_user_id');
     }
 
     public function orders(): HasMany

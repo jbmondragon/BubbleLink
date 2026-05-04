@@ -1,129 +1,86 @@
 <?php
 
-use App\Models\Membership;
-use App\Models\Organization;
 use App\Models\Service;
 use App\Models\Shop;
 use App\Models\User;
 
-test('guided organization creation redirects owners into the setup wizard', function () {
-    $user = User::factory()->create([
+test('approved owners can manage services immediately after approval-created shop bootstrap', function () {
+    $owner = User::factory()->create([
         'owner_registration_status' => 'approved',
     ]);
 
-    $response = $this->actingAs($user)->post('/organizations', [
-        'name' => 'Wizard Wash Laundry',
-        'guided' => 1,
-    ]);
-
-    $organization = Organization::query()->where('name', 'Wizard Wash Laundry')->first();
-
-    expect($organization)->not->toBeNull();
-
-    $response->assertRedirect(route('admin.setup', absolute: false));
-    $response->assertSessionHas('success', 'Organization created. Continue the guided setup below.');
-
-    $this->assertDatabaseHas('memberships', [
-        'user_id' => $user->id,
-        'organization_id' => $organization->id,
-        'role' => 'owner',
-    ]);
-});
-
-test('customers can not access organization creation routes', function () {
-    $customer = User::factory()->create();
-
-    $this->actingAs($customer)
-        ->get(route('organizations.create'))
-        ->assertForbidden();
-
-    $this->actingAs($customer)
-        ->post(route('organizations.store'), [
-            'name' => 'Blocked Customer Organization',
-            'guided' => 1,
-        ])
-        ->assertForbidden();
-});
-
-test('owners can complete the guided admin setup wizard', function () {
-    $owner = User::factory()->create();
-    $organization = Organization::create([
-        'name' => 'Setup Wizard Laundry',
+    $shop = Shop::create([
         'owner_user_id' => $owner->id,
-    ]);
-
-    Membership::create([
-        'user_id' => $owner->id,
-        'organization_id' => $organization->id,
-        'role' => 'owner',
+        'shop_name' => 'Bootstrap Branch',
+        'address' => '123 Setup Street',
+        'contact_number' => '09178889999',
+        'description' => 'Created from submitted registration details.',
     ]);
 
     $this->actingAs($owner)
-        ->post(route('admin.setup.shop'), [
-            'shop_name' => 'Wizard Branch',
-            'address' => '123 Setup Street',
-            'contact_number' => '09178889999',
-            'description' => 'First branch for guided setup.',
-        ])
-        ->assertRedirect(route('admin.setup', absolute: false));
+        ->get(route('services.index'))
+        ->assertOk()
+        ->assertSee('Wash, Dry, Fold')
+        ->assertSee('Dry Cleaning')
+        ->assertSee('Ironing Only')
+        ->assertSee('Wash, Dry, Fold, Iron');
 
-    $shop = Shop::query()->where('organization_id', $organization->id)->first();
-
-    expect($shop)->not->toBeNull();
-
-    $this->actingAs($owner)
-        ->post(route('admin.setup.service'), [
-            'shop_id' => $shop->id,
-            'name' => 'Premium Fold',
-            'price' => 199.50,
-        ])
-        ->assertRedirect(route('admin.setup', absolute: false));
-
-    $service = Service::query()->where('organization_id', $organization->id)->where('name', 'Premium Fold')->first();
+    $service = Service::query()->where('shop_id', $shop->id)->where('name', 'Wash, Dry, Fold, Iron')->first();
 
     expect($service)->not->toBeNull();
 
     $this->actingAs($owner)
-        ->post(route('admin.setup.member'), [
-            'name' => 'Wizard Manager',
-            'email' => 'wizard-manager@example.com',
-            'contact_number' => '09176665555',
-            'role' => 'manager',
+        ->post(route('shop-services.store'), [
             'shop_id' => $shop->id,
+            'service_id' => $service->id,
+            'price' => 199.50,
         ])
-        ->assertRedirect(route('admin.setup', absolute: false));
+        ->assertRedirect(route('services.index', absolute: false));
 
     $this->assertDatabaseHas('shop_services', [
         'shop_id' => $shop->id,
         'service_id' => $service->id,
-        'price' => '199.50',
-    ]);
-
-    $this->assertDatabaseHas('users', [
-        'email' => 'wizard-manager@example.com',
-        'name' => 'Wizard Manager',
-    ]);
-
-    $this->assertDatabaseHas('memberships', [
-        'organization_id' => $organization->id,
-        'role' => 'manager',
-        'shop_id' => $shop->id,
+        'price' => '199.5',
     ]);
 
     $this->actingAs($owner)
-        ->get(route('admin.setup'))
+        ->get(route('services.index'))
         ->assertOk()
-        ->assertSee('Wizard Branch')
-        ->assertSee('Premium Fold')
-        ->assertSee('Team size:');
+        ->assertSee('Bootstrap Branch')
+        ->assertSee('Wash, Dry, Fold, Iron');
 });
 
-test('admins without an owned organization are redirected back to onboarding from the setup wizard', function () {
-    $user = User::factory()->create([
+test('customers can not access the fallback owner shop bootstrap routes', function () {
+    $customer = User::factory()->create();
+
+    $this->actingAs($customer)
+        ->get(route('shops.create'))
+        ->assertForbidden();
+
+    $this->actingAs($customer)
+        ->post(route('shops.store'), [
+            'shop_name' => 'Blocked Shop',
+            'address' => '123 Blocked Street',
+        ])
+        ->assertForbidden();
+});
+
+test('approved owners without a shop can still use the fallback shop creation flow', function () {
+    $owner = User::factory()->create([
         'owner_registration_status' => 'approved',
     ]);
 
-    $this->actingAs($user)
-        ->get(route('admin.setup'))
-        ->assertRedirect(route('admin.start', absolute: false));
+    $this->actingAs($owner)
+        ->post(route('shops.store'), [
+            'shop_name' => 'Fallback Branch',
+            'address' => '789 Fallback Avenue',
+            'contact_number' => '09176667777',
+            'description' => 'Used when legacy approved owners have no shop yet.',
+        ])
+        ->assertRedirect(route('dashboard', absolute: false));
+
+    $this->assertDatabaseHas('shops', [
+        'owner_user_id' => $owner->id,
+        'shop_name' => 'Fallback Branch',
+    ]);
 });

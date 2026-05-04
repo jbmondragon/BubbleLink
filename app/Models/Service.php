@@ -11,20 +11,37 @@ class Service extends Model
 {
     use HasFactory;
 
+    public const DEFAULT_SERVICE_NAMES = [
+        'Wash, Dry, Fold',
+        'Dry Cleaning',
+        'Ironing Only',
+        'Wash, Dry, Fold, Iron',
+    ];
+
     public $timestamps = false;
 
     protected $fillable = [
-        'organization_id',
+        'shop_id',
         'name',
     ];
 
-    public function organization(): BelongsTo
+    public function shop(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(Shop::class);
     }
 
     public function shopServices(): HasMany
     {
         return $this->hasMany(ShopService::class);
+    }
+
+    public static function ensureDefaultServicesForShop(Shop $shop): void
+    {
+        foreach (self::DEFAULT_SERVICE_NAMES as $serviceName) {
+            self::query()->firstOrCreate([
+                'shop_id' => $shop->id,
+                'name' => $serviceName,
+            ]);
+        }
     }
 }

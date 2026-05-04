@@ -1,21 +1,14 @@
 @php
+    // Collapse account state into simple booleans so the menu can switch surfaces cleanly.
     $isAuthenticated = auth()->check();
-    $organizationMemberships = auth()->check()
-        ? auth()->user()->memberships()->with(['organization', 'shop'])->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 when 'staff' then 3 else 4 end")->get()
-        : collect();
     $isPlatformAdmin = $isAuthenticated && auth()->user()->is_platform_admin;
-    $isCustomer = $isAuthenticated && ! $isPlatformAdmin && $organizationMemberships->isEmpty();
-
-    $activeOrganizationId = session('current_organization_id');
-
-    if ($activeOrganizationId === null && $organizationMemberships->isNotEmpty()) {
-        $activeOrganizationId = $organizationMemberships->first()->organization_id;
-    }
-
-    $activeOrganizationMembership = $organizationMemberships->firstWhere('organization_id', (int) $activeOrganizationId);
+    $isShopOwner = $isAuthenticated && ! $isPlatformAdmin && (
+        auth()->user()->shops()->exists() || auth()->user()->isApprovedShopOwnerRegistration()
+    );
+    $isCustomer = $isAuthenticated && ! $isPlatformAdmin && ! $isShopOwner;
 @endphp
 
-<nav x-data="{ open: false }" class="app-nav border-b">
+<nav x-data="navigationMenu()" class="app-nav border-b">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -23,13 +16,13 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-teal-900" />
+                        <x-application-logo class="block h-9 w-auto fill-current text-neutral-950" />
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    @if (! $isPlatformAdmin && ! $isCustomer)
+                    @if (! $isPlatformAdmin && ! $isShopOwner)
                         <x-nav-link :href="route('customer.shops.index')" :active="request()->routeIs('customer.shops.*') || request()->routeIs('customer.orders.create')">
                             {{ __('Browse Shops') }}
                         </x-nav-link>
@@ -39,8 +32,8 @@
                         <x-nav-link :href="route('platform-admin.owner-registrations.index')" :active="request()->routeIs('platform-admin.owner-registrations.*') || request()->routeIs('dashboard')">
                             {{ __('Owner Approvals') }}
                         </x-nav-link>
-                    @elseif ($organizationMemberships->isNotEmpty())
-                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard') || request()->routeIs('services.*') || request()->routeIs('orders.*') || request()->routeIs('memberships.*') || request()->routeIs('shops.*') || request()->routeIs('organizations.*')">
+                    @elseif ($isShopOwner)
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard') || request()->routeIs('services.*') || request()->routeIs('orders.*') || request()->routeIs('shops.*')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
                     @endif
@@ -50,38 +43,23 @@
 
             <div class="hidden sm:flex sm:items-center sm:ms-6 sm:gap-4">
                 @guest
-                    <a href="{{ route('customer.login') }}" class="inline-flex items-center rounded-full border border-teal-900/15 bg-white px-4 py-2 text-sm font-medium text-teal-900 transition hover:border-teal-900 hover:bg-teal-900 hover:text-amber-50">Customer Login</a>
-                    <a href="{{ route('admin.login') }}" class="inline-flex items-center rounded-full border border-teal-900/15 bg-white px-4 py-2 text-sm font-medium text-teal-900 transition hover:border-teal-900 hover:bg-teal-900 hover:text-amber-50">Shop Owner Login</a>
-                    <a href="{{ route('platform-admin.login') }}" class="inline-flex items-center rounded-full border border-teal-900/15 bg-white px-4 py-2 text-sm font-medium text-teal-900 transition hover:border-teal-900 hover:bg-teal-900 hover:text-amber-50">Admin Login</a>
+                    <!-- Guests get direct entry points into each portal. -->
+                    <a href="{{ route('customer.login') }}" class="inline-flex items-center rounded-full border border-neutral-900/15 bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white">Customer Login</a>
+                    <a href="{{ route('admin.login') }}" class="inline-flex items-center rounded-full border border-neutral-900/15 bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white">Shop Owner Login</a>
+                    <a href="{{ route('platform-admin.login') }}" class="inline-flex items-center rounded-full border border-neutral-900/15 bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white">Admin Login</a>
                 @endguest
 
-                @if ($organizationMemberships->count() > 1)
-                    <form method="POST" action="{{ route('organizations.switch') }}" class="flex items-center gap-2">
-                        @csrf
-                        <label for="navigation_organization_id" class="text-xs font-semibold uppercase tracking-wide text-teal-800/70">Organization</label>
-                        <select id="navigation_organization_id" name="organization_id" onchange="this.form.submit()" class="rounded-2xl border-orange-200 bg-white/90 py-1 text-sm text-teal-950 shadow-sm focus:border-teal-600 focus:ring-teal-600">
-                            @foreach ($organizationMemberships as $membership)
-                                <option value="{{ $membership->organization_id }}" @selected($membership->organization_id === (int) $activeOrganizationId)>
-                                    {{ $membership->organization->name }} ({{ ucfirst($membership->role) }}{{ $membership->shop ? ' · '.$membership->shop->shop_name : '' }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </form>
-                @elseif ($activeOrganizationMembership)
-                    <div class="text-sm text-teal-800/80">
-                        <span class="font-medium text-teal-950">{{ $activeOrganizationMembership->organization->name }}</span>
-                        <span class="text-xs uppercase tracking-wide text-orange-700">{{ $activeOrganizationMembership->role }}</span>
-                        @if ($activeOrganizationMembership->shop)
-                            <div class="mt-1 text-xs text-teal-800/70">Assigned shop: <span class="font-medium text-teal-950">{{ $activeOrganizationMembership->shop->shop_name }}</span></div>
-                        @endif
-                    </div>
-                @endif
-
                 @auth
-                    <!-- Settings Dropdown -->
+                    @if ($isCustomer)
+                        <a href="{{ route('customer.orders.index') }}" class="inline-flex items-center rounded-full border border-neutral-200 bg-white/80 px-4 py-2 text-sm font-medium text-neutral-950 transition hover:bg-neutral-100 hover:text-neutral-950">
+                            Order history
+                        </a>
+                    @endif
+
+                    <!-- Signed-in users get a shared account dropdown with role-specific shortcuts. -->
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
-                            <button class="inline-flex items-center rounded-full border border-orange-100 bg-white/80 px-3 py-2 text-sm font-medium leading-4 text-teal-900 hover:text-teal-950 focus:outline-none transition ease-in-out duration-150">
+                            <button class="inline-flex items-center rounded-full border border-neutral-200 bg-white/80 px-3 py-2 text-sm font-medium leading-4 text-neutral-950 hover:bg-neutral-100 hover:text-neutral-950 focus:outline-none focus:bg-neutral-100 transition ease-in-out duration-150">
                                 <div>{{ Auth::user()->name }}</div>
 
                                 <div class="ms-1">
@@ -110,11 +88,9 @@
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
 
-                                <x-dropdown-link :href="route('logout')"
-                                        onclick="event.preventDefault();
-                                                    this.closest('form').submit();">
+                                <button type="submit" class="block w-full px-4 py-2 text-start text-sm leading-5 text-neutral-950 hover:bg-neutral-100 focus:outline-none focus:bg-neutral-100 transition duration-150 ease-in-out">
                                     {{ __('Log Out') }}
-                                </x-dropdown-link>
+                                </button>
                             </form>
                         </x-slot>
                     </x-dropdown>
@@ -123,7 +99,7 @@
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center rounded-2xl p-2 text-teal-800 hover:bg-white/70 hover:text-teal-950 focus:outline-none focus:bg-white/70 focus:text-teal-950 transition duration-150 ease-in-out">
+                <button @click="toggle()" class="inline-flex items-center justify-center rounded-2xl p-2 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-950 focus:outline-none focus:bg-neutral-100 focus:text-neutral-950 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -135,8 +111,9 @@
 
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+        <!-- Mobile menu mirrors the desktop links using the same role checks above. -->
         <div class="pt-2 pb-3 space-y-1">
-            @if (! $isPlatformAdmin && ! $isCustomer)
+            @if (! $isPlatformAdmin && ! $isShopOwner)
                 <x-responsive-nav-link :href="route('customer.shops.index')" :active="request()->routeIs('customer.shops.*') || request()->routeIs('customer.orders.create')">
                     {{ __('Browse Shops') }}
                 </x-responsive-nav-link>
@@ -146,8 +123,8 @@
                 <x-responsive-nav-link :href="route('platform-admin.owner-registrations.index')" :active="request()->routeIs('platform-admin.owner-registrations.*') || request()->routeIs('dashboard')">
                     {{ __('Owner Approvals') }}
                 </x-responsive-nav-link>
-            @elseif ($organizationMemberships->isNotEmpty())
-                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard') || request()->routeIs('services.*') || request()->routeIs('orders.*') || request()->routeIs('memberships.*') || request()->routeIs('shops.*') || request()->routeIs('organizations.*')">
+            @elseif ($isShopOwner)
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard') || request()->routeIs('services.*') || request()->routeIs('orders.*') || request()->routeIs('shops.*')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
             @endif
@@ -155,48 +132,19 @@
         </div>
 
         <!-- Responsive Settings Options -->
-        <div class="border-t border-orange-100 pt-4 pb-1">
+        <div class="border-t border-neutral-200 pt-4 pb-1">
             @auth
                 <div class="px-4">
-                    <div class="text-base font-medium text-teal-950">{{ Auth::user()->name }}</div>
-                    <div class="text-sm font-medium text-teal-800/80">{{ Auth::user()->email }}</div>
-                    @if ($activeOrganizationMembership?->shop)
-                        <div class="mt-1 text-xs font-medium uppercase tracking-wide text-orange-700">Assigned shop: {{ $activeOrganizationMembership->shop->shop_name }}</div>
-                    @endif
+                    <div class="text-base font-medium text-neutral-950">{{ Auth::user()->name }}</div>
+                    <div class="text-sm font-medium text-neutral-600">{{ Auth::user()->email }}</div>
                 </div>
             @else
                 <div class="px-4 space-y-1">
-                    <a href="{{ route('customer.login') }}" class="block text-sm font-medium text-teal-800 hover:text-teal-950">Customer Login</a>
-                    <a href="{{ route('admin.login') }}" class="block text-sm font-medium text-teal-800 hover:text-teal-950">Shop Owner Login</a>
-                    <a href="{{ route('platform-admin.login') }}" class="block text-sm font-medium text-teal-800 hover:text-teal-950">Admin Login</a>
+                    <a href="{{ route('customer.login') }}" class="block text-sm font-medium text-neutral-700 hover:text-neutral-950">Customer Login</a>
+                    <a href="{{ route('admin.login') }}" class="block text-sm font-medium text-neutral-700 hover:text-neutral-950">Shop Owner Login</a>
+                    <a href="{{ route('platform-admin.login') }}" class="block text-sm font-medium text-neutral-700 hover:text-neutral-950">Admin Login</a>
                 </div>
             @endauth
-
-            @if ($organizationMemberships->isNotEmpty())
-                <div class="mt-3 px-4">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-teal-800/70">Organization</div>
-
-                    @if ($organizationMemberships->count() > 1)
-                        <form method="POST" action="{{ route('organizations.switch') }}" class="mt-2">
-                            @csrf
-                            <select name="organization_id" onchange="this.form.submit()" class="block w-full rounded-2xl border-orange-200 bg-white/90 text-sm text-teal-950 shadow-sm focus:border-teal-600 focus:ring-teal-600">
-                                @foreach ($organizationMemberships as $membership)
-                                    <option value="{{ $membership->organization_id }}" @selected($membership->organization_id === (int) $activeOrganizationId)>
-                                        {{ $membership->organization->name }} ({{ ucfirst($membership->role) }}{{ $membership->shop ? ' · '.$membership->shop->shop_name : '' }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                    @elseif ($activeOrganizationMembership)
-                        <div class="mt-2 text-sm text-teal-800/80">
-                            {{ $activeOrganizationMembership->organization->name }} ({{ ucfirst($activeOrganizationMembership->role) }})
-                            @if ($activeOrganizationMembership->shop)
-                                <div class="mt-1 text-xs text-teal-800/70">Assigned shop: {{ $activeOrganizationMembership->shop->shop_name }}</div>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-            @endif
 
             @auth
                 <div class="mt-3 space-y-1">
@@ -213,11 +161,9 @@
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
 
-                        <x-responsive-nav-link :href="route('logout')"
-                                onclick="event.preventDefault();
-                                            this.closest('form').submit();">
+                        <button type="submit" class="block w-full ps-3 pe-4 py-2 border-l-4 border-transparent text-start text-base font-medium text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100 hover:border-neutral-300 focus:outline-none focus:text-neutral-950 focus:bg-neutral-100 focus:border-neutral-400 transition duration-150 ease-in-out">
                             {{ __('Log Out') }}
-                        </x-responsive-nav-link>
+                        </button>
                     </form>
                 </div>
             @endauth

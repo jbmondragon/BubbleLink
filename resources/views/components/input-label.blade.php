@@ -1,5 +1,6 @@
 @props(['value'])
 
-<label {{ $attributes->merge(['class' => 'block text-sm font-medium text-teal-900']) }}>
+{{-- Form label with default styling --}}
+<label {{ $attributes->merge(['class' => 'block text-sm font-medium text-neutral-950']) }}>
     {{ $value ?? $slot }}
 </label>

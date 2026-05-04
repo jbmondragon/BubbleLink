@@ -1,63 +1,61 @@
-<x-app-layout>
+
+<!-- This page allows customers to create a laundry order by selecting a service, 
+ choosing a service mode (pickup, delivery, walk-in), and providing the necessary address 
+ and scheduling details. The form dynamically updates available fields and estimated pricing 
+ based on user selections, ensuring only relevant inputs are shown before submitting the order. -->
+
+ <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <!-- Customer order header keeps the history view -->
+        <div class="customer-page-header customer-page-header--split">
             <div>
-                <p class="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-600">Customer Orders</p>
-                <h1 class="text-3xl font-semibold text-slate-900">My Orders</h1>
-                <p class="mt-1 text-sm text-slate-600">Track every order you placed across all shops.</p>
+                <p class="customer-eyebrow customer-eyebrow--blue">Customer Orders</p>
+                <h1 class="customer-page-title">My Orders</h1>
             </div>
-            <a href="{{ route('customer.shops.index') }}" class="inline-flex items-center rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 hover:text-slate-900">
+            <a href="{{ route('customer.shops.index') }}" class="customer-button customer-button--outline">
                 Book another service
             </a>
         </div>
     </x-slot>
 
-    <div class="py-10">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="grid gap-6 md:grid-cols-3">
-                <div class="rounded-3xl bg-slate-900 p-6 text-white shadow-lg">
-                    <p class="text-xs uppercase tracking-[0.3em] text-emerald-200">Total orders</p>
-                    <p class="mt-4 text-4xl font-semibold">{{ $orders->count() }}</p>
+    <div class="customer-page">
+        <div class="customer-page-container">
+            <!-- Summary cards give a quick count of order volume and completion state. -->
+            <div class="customer-grid-three">
+                <div class="customer-stat-card customer-stat-card--dark">
+                    <p class="customer-eyebrow text-neutral-200">Total orders</p>
+                    <p class="customer-stat-value">{{ $totalOrderCount }}</p>
                 </div>
-                <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Pending</p>
-                    <p class="mt-4 text-4xl font-semibold text-slate-900">{{ $orders->where('status', 'pending')->count() }}</p>
+                <div class="customer-stat-card customer-stat-card--light">
+                    <p class="customer-eyebrow customer-eyebrow--muted">Pending</p>
+                    <p class="customer-stat-value text-slate-900">{{ $pendingOrderCount }}</p>
                 </div>
-                <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Completed</p>
-                    <p class="mt-4 text-4xl font-semibold text-slate-900">{{ $orders->where('status', 'completed')->count() }}</p>
+                <div class="customer-stat-card customer-stat-card--light">
+                    <p class="customer-eyebrow customer-eyebrow--muted">Completed</p>
+                    <p class="customer-stat-value text-slate-900">{{ $completedOrderCount }}</p>
                 </div>
             </div>
 
-            <div class="mt-8 space-y-4">
+            <!-- Each card shows the booked shop, service, status, price, and detail actions. -->
+            <div class="customer-stack customer-stack--tight mt-8">
                 @forelse ($orders as $order)
-                    <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <article class="customer-card">
+                        <div class="customer-card-row customer-card-row--between lg:items-center lg:justify-between">
                             <div>
-                                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Order #{{ $order->id }}</p>
-                                <h2 class="mt-2 text-2xl font-semibold text-slate-900">{{ $order->shop->shop_name }}</h2>
-                                <p class="mt-1 text-sm text-slate-600">{{ $order->shopService->service->name }} · {{ ucfirst(str_replace('_', ' ', $order->service_mode)) }}</p>
-                                @if ($order->shop_rating)
-                                    <p class="mt-2 text-sm text-amber-600">Rated {{ $order->shop_rating }}/5</p>
-                                @elseif ($order->status === 'completed')
-                                    <p class="mt-2 text-sm text-slate-500">Completed order. You can rate this shop from the order details page.</p>
-                                @endif
+                                <p class="customer-eyebrow customer-eyebrow--muted">Order #{{ $order->id }}</p>
+                                <h2 class="customer-card-title">{{ $order->shop->shop_name }}</h2>
+                                <p class="customer-card-copy">{{ $order->shopService->service->name }} · {{ ucfirst(str_replace('_', ' ', $order->service_mode)) }}</p>
                             </div>
 
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{{ str_replace('_', ' ', $order->status) }}</span>
-                                <span class="text-sm font-semibold text-slate-900">PHP {{ number_format((float) $order->total_price, 2) }}</span>
-                                @if ($order->status === 'completed')
-                                    <a href="{{ route('customer.orders.show', $order) }}#shop-rating" class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100">
-                                        {{ $order->shop_rating ? 'Edit rating' : 'Rate shop' }}
-                                    </a>
-                                @endif
-                                <a href="{{ route('customer.orders.show', $order) }}" class="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700">View order</a>
+                            <div class="customer-inline-meta">
+                                <span class="customer-badge customer-badge--status">{{ str_replace('_', ' ', $order->status) }}</span>
+                                <span class="customer-price customer-price--small">PHP {{ number_format((float) $order->total_price, 2) }}</span>
+                                <a href="{{ route('customer.orders.show', $order) }}" class="customer-button customer-button--dark">View order</a>
                             </div>
                         </div>
                     </article>
                 @empty
-                    <div class="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+                    <div class="customer-empty-state">
                         You have not placed any orders yet.
                     </div>
                 @endforelse

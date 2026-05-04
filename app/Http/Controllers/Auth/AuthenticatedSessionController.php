@@ -9,6 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
+/**
+ * Handles the login flow for customer, shop-owner, and platform-admin
+ * authentication portals.
+ */
 class AuthenticatedSessionController extends Controller
 {
     /**
@@ -31,7 +35,7 @@ class AuthenticatedSessionController extends Controller
     {
         return $this->renderLoginView(
             heading: 'Shop Owner login',
-            description: 'Sign in to manage your organization, services, staff, and orders.',
+            description: 'Sign in to manage your shops, services, and orders.',
             formActionRoute: 'admin.login.store',
             alternateLoginRoute: 'customer.login',
             alternateLoginLabel: 'Customer login',
@@ -75,14 +79,14 @@ class AuthenticatedSessionController extends Controller
                 return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
             }
 
-            if ($request->user()->memberships()->exists()) {
+            if ($request->user()->shops()->exists()) {
                 return redirect()->intended(route('dashboard', absolute: false));
             }
 
             if ($request->user()->isApprovedShopOwnerRegistration()) {
                 return redirect()
-                    ->route('admin.start')
-                    ->with('success', 'Shop owner account approved. Create your organization to get started.');
+                    ->route('dashboard')
+                    ->with('success', 'Shop owner account approved. Finish your first shop profile to get started.');
             }
 
             if ($request->user()->isPendingShopOwnerApproval()) {
@@ -98,15 +102,17 @@ class AuthenticatedSessionController extends Controller
 
         if ($request->user()->is_platform_admin) {
             return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
+            /**
+             * Build the shared login view payload for the portal-specific login
+             * screens.
+             */
         }
 
-        if ($request->user()->memberships()->exists() || $request->user()->owner_registration_status !== null) {
+        if ($request->user()->shops()->exists() || $request->user()->owner_registration_status !== null) {
             return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
         }
 
-        $redirectRoute = $request->user()->memberships()->exists()
-            ? route('dashboard', absolute: false)
-            : route('customer.shops.index', absolute: false);
+        $redirectRoute = route('customer.shops.index', absolute: false);
 
         return redirect()->intended($redirectRoute);
     }

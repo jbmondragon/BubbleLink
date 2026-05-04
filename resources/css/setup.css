@@ -1,0 +1,22 @@
+/* ── Hero banner ─────────────────────────────────────────── */
+.app-hero {
+    background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #6b7280 100%);
+}
+
+/* ── Panel variants ──────────────────────────────────────── */
+.app-panel {
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+}
+
+.app-panel-muted {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+/* ── Select input shared style ───────────────────────────── */
+.setup-select {
+    @apply mt-1 block w-full rounded-2xl border-neutral-300 bg-white/90
+           text-neutral-950 shadow-sm
+           focus:border-neutral-900 focus:ring-neutral-900;
+}

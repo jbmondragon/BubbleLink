@@ -6,6 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -15,9 +16,11 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased text-slate-900">
+        <!-- Shared decorative background used by authenticated and guest shells. -->
         @include('layouts.background-bubbles')
 
         <div class="app-shell">
+            <!-- Global navigation adapts links based on customer, owner, or admin state. -->
             @include('layouts.navigation')
 
             <!-- Page Heading -->
@@ -31,6 +34,7 @@
 
             <!-- Page Content -->
             <main>
+                <!-- Individual pages render their main content into the layout slot. -->
                 {{ $slot }}
             </main>
         </div>

@@ -13,10 +13,8 @@ class ShopController extends Controller
     public function show(Request $request, Shop $shop): View
     {
         Gate::authorize('view', $shop);
-        $currentRole = $this->currentRole($request);
 
         $shop->load([
-            'organization',
             'shopServices.service',
             'orders.customer',
             'orders.shopService.service',
@@ -26,8 +24,6 @@ class ShopController extends Controller
 
         return view('shops.show', [
             'shop' => $shop,
-            'organization' => $shop->organization,
-            'currentRole' => $currentRole,
             'serviceCount' => $shop->shopServices->count(),
             'orderCount' => $orders->count(),
             'completedOrderCount' => $orders->where('status', 'completed')->count(),
@@ -39,63 +35,52 @@ class ShopController extends Controller
 
     public function create(Request $request): View
     {
-        $organization = $this->currentOrganization($request);
+        abort_unless($request->user()->isApprovedShopOwnerRegistration(), 403);
 
-        if (! $organization) {
-            return view('shops.create', ['organization' => null]);
+        if ($request->user()->shops()->exists()) {
+            abort(403);
         }
 
-        Gate::authorize('create', [Shop::class, $organization]);
-
-        return view('shops.create', ['organization' => $organization]);
+        return view('shops.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
+        abort_unless($request->user()->isApprovedShopOwnerRegistration(), 403);
+
+        if ($request->user()->shops()->exists()) {
+            return redirect()
+                ->route('dashboard')
+                ->with('warning', 'Shop details are already set. Use Services and Orders to manage day-to-day work.');
+        }
+
         $validated = $request->validate([
-            'organization_id' => 'required|exists:organizations,id',
             'shop_name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
             'contact_number' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:255',
         ]);
 
-        Gate::authorize('create', [Shop::class, $this->currentOrganization($request)]);
-
-        Shop::create($validated);
+        Shop::create([
+            ...$validated,
+            'owner_user_id' => $request->user()->id,
+        ]);
 
         return redirect()->route('dashboard')->with('success', 'Shop created!');
     }
 
     public function edit(Request $request, Shop $shop): View
     {
-        Gate::authorize('update', $shop);
-
-        return view('shops.edit', ['shop' => $shop]);
+        abort(403);
     }
 
     public function update(Request $request, Shop $shop): RedirectResponse
     {
-        Gate::authorize('update', $shop);
-
-        $validated = $request->validate([
-            'shop_name' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'contact_number' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:255',
-        ]);
-
-        $shop->update($validated);
-
-        return redirect()->route('dashboard')->with('success', 'Shop updated!');
+        abort(403);
     }
 
     public function destroy(Request $request, Shop $shop): RedirectResponse
     {
-        Gate::authorize('delete', $shop);
-
-        $shop->delete();
-
-        return redirect()->route('dashboard')->with('success', 'Shop deleted!');
+        abort(403);
     }
 }

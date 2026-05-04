@@ -14,6 +14,11 @@ class ShopServiceController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        $shop = Shop::findOrFail($request->integer('shop_id'));
+        Gate::authorize('create', [ShopService::class, $shop]);
+
+        Service::ensureDefaultServicesForShop($shop);
+
         $validated = $request->validateWithBag('shopServiceCreate', [
             'shop_id' => 'required|exists:shops,id',
             'service_id' => [
@@ -23,18 +28,15 @@ class ShopServiceController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
-        $shop = Shop::findOrFail($validated['shop_id']);
-        Gate::authorize('create', [ShopService::class, $shop]);
-
-        $serviceExistsForOrganization = Service::query()
+        $serviceExistsForShop = Service::query()
             ->whereKey($validated['service_id'])
-            ->where('organization_id', $shop->organization_id)
+            ->where('shop_id', $shop->id)
             ->exists();
 
-        if (! $serviceExistsForOrganization) {
+        if (! $serviceExistsForShop) {
             return back()
                 ->withErrors([
-                    'service_id' => 'Select a service from your organization.',
+                    'service_id' => 'Select a service from your shop.',
                 ], 'shopServiceCreate')
                 ->withInput();
         }

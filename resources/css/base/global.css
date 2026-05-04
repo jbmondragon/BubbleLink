@@ -1,0 +1,14 @@
+
+@layer base {
+	body {
+		min-height: 100vh; /* ensures the body always fills the viewport height */
+		margin: 0; /* removes default margin to prevent unwanted spacing around the app */
+		overflow-x: hidden; /* prevents horizontal scrollbars caused by decorative elements that may overflow */
+		position: relative; /* establishes a stacking context for absolutely positioned children like background bubbles */
+		background:
+			radial-gradient(circle at top left, rgba(45, 138, 129, 0.12), transparent 34%),
+			radial-gradient(circle at top right, rgba(77, 174, 163, 0.1), transparent 30%),
+			linear-gradient(180deg, #f4fbfa 0%, #fbfefd 44%, #edf6f5 100%);
+		color: #18312f; /* sets the default text color for the app */
+	}
+}

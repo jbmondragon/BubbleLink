@@ -1,8 +1,6 @@
 <?php
 
-use App\Models\Membership;
 use App\Models\Order;
-use App\Models\Organization;
 use App\Models\Service;
 use App\Models\Shop;
 use App\Models\ShopService;
@@ -25,10 +23,6 @@ test('customers are blocked from business, dashboard, and platform admin routes'
         ->assertForbidden();
 
     $this->actingAs($customer)
-        ->get(route('memberships.index'))
-        ->assertForbidden();
-
-    $this->actingAs($customer)
         ->get(route('shops.create'))
         ->assertForbidden();
 
@@ -38,10 +32,6 @@ test('customers are blocked from business, dashboard, and platform admin routes'
 
     $this->actingAs($customer)
         ->get(route('platform-admin.owner-registrations.index'))
-        ->assertForbidden();
-
-    $this->actingAs($customer)
-        ->get(route('admin.start'))
         ->assertForbidden();
 });
 
@@ -72,119 +62,50 @@ test('platform admins can access approval pages but not business or customer rou
         ->assertForbidden();
 });
 
-test('approved shop owners without an organization can access setup routes and dashboard', function () {
+test('approved shop owners without a shop can access dashboard and fallback shop creation routes', function () {
     $approvedOwner = User::factory()->create([
         'owner_registration_status' => 'approved',
     ]);
 
     $this->actingAs($approvedOwner)
         ->get(route('dashboard'))
-        ->assertOk()
-        ->assertSeeText('You have not created an organization yet.');
-
-    $this->actingAs($approvedOwner)
-        ->get(route('admin.start'))
         ->assertOk();
 
     $this->actingAs($approvedOwner)
-        ->get(route('organizations.create'))
+        ->get(route('shops.create'))
         ->assertOk();
 
     $this->actingAs($approvedOwner)
         ->get(route('services.index'))
-        ->assertRedirect(route('organizations.create'));
+        ->assertRedirect(route('shops.create'));
 
     $this->actingAs($approvedOwner)
         ->get(route('orders.index'))
-        ->assertRedirect(route('organizations.create'));
-
-    $this->actingAs($approvedOwner)
-        ->get(route('memberships.index'))
-        ->assertRedirect(route('organizations.create'));
+        ->assertRedirect(route('shops.create'));
 
     $this->actingAs($approvedOwner)
         ->get(route('customer.orders.index'))
         ->assertForbidden();
 });
 
-test('owners managers and staff are limited to their intended top-level route areas', function () {
-    ['owner' => $owner, 'organization' => $organization, 'shop' => $shop] = createRouteAreaAccessContext();
-    $manager = User::factory()->create();
-    $staff = User::factory()->create();
-
-    Membership::create([
-        'user_id' => $manager->id,
-        'organization_id' => $organization->id,
-        'shop_id' => $shop->id,
-        'role' => 'manager',
-    ]);
-
-    Membership::create([
-        'user_id' => $staff->id,
-        'organization_id' => $organization->id,
-        'shop_id' => $shop->id,
-        'role' => 'staff',
-    ]);
+test('approved shop owners with a shop can access business routes', function () {
+    ['owner' => $owner] = createRouteAreaAccessContext();
 
     $this->actingAs($owner)
         ->get(route('dashboard'))
         ->assertOk();
 
     $this->actingAs($owner)
-        ->get(route('memberships.index'))
-        ->assertOk();
-
-    $this->actingAs($owner)
-        ->get(route('shops.create'))
-        ->assertOk();
-
-    $this->actingAs($owner)
-        ->get(route('services.index'))
-        ->assertRedirect(route('dashboard'));
-
-    $this->actingAs($owner)
-        ->get(route('orders.index'))
-        ->assertRedirect(route('dashboard'));
-
-    $this->actingAs($manager)
-        ->get(route('dashboard'))
-        ->assertOk();
-
-    $this->actingAs($manager)
-        ->get(route('services.index'))
-        ->assertOk();
-
-    $this->actingAs($manager)
-        ->get(route('orders.index'))
-        ->assertOk();
-
-    $this->actingAs($manager)
-        ->get(route('memberships.index'))
-        ->assertForbidden();
-
-    $this->actingAs($manager)
         ->get(route('shops.create'))
         ->assertForbidden();
 
-    $this->actingAs($staff)
-        ->get(route('dashboard'))
+    $this->actingAs($owner)
+        ->get(route('services.index'))
         ->assertOk();
 
-    $this->actingAs($staff)
+    $this->actingAs($owner)
         ->get(route('orders.index'))
         ->assertOk();
-
-    $this->actingAs($staff)
-        ->get(route('services.index'))
-        ->assertRedirect(route('dashboard'));
-
-    $this->actingAs($staff)
-        ->get(route('memberships.index'))
-        ->assertForbidden();
-
-    $this->actingAs($staff)
-        ->get(route('shops.create'))
-        ->assertForbidden();
 });
 
 function createRouteAreaAccessContext(): array
@@ -193,19 +114,8 @@ function createRouteAreaAccessContext(): array
         'owner_registration_status' => 'approved',
     ]);
 
-    $organization = Organization::create([
-        'name' => 'Route Access Laundry',
-        'owner_user_id' => $owner->id,
-    ]);
-
-    Membership::create([
-        'user_id' => $owner->id,
-        'organization_id' => $organization->id,
-        'role' => 'owner',
-    ]);
-
     $shop = Shop::create([
-        'organization_id' => $organization->id,
+        'owner_user_id' => $owner->id,
         'shop_name' => 'Route Access Branch',
         'address' => '123 Access Street',
         'contact_number' => '09171234567',
@@ -213,7 +123,7 @@ function createRouteAreaAccessContext(): array
     ]);
 
     $service = Service::create([
-        'organization_id' => $organization->id,
+        'shop_id' => $shop->id,
         'name' => 'Access Test Service',
     ]);
 
@@ -241,5 +151,5 @@ function createRouteAreaAccessContext(): array
         'payment_status' => 'unpaid',
     ]);
 
-    return compact('owner', 'organization', 'shop', 'service', 'shopService', 'customer', 'order');
+    return compact('owner', 'shop', 'service', 'shopService', 'customer', 'order');
 }

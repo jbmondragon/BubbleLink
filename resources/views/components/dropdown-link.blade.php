@@ -1,1 +1,5 @@
-<a {{ $attributes->merge(['class' => 'block w-full px-4 py-2 text-start text-sm leading-5 text-teal-900 hover:bg-orange-50 focus:outline-none focus:bg-orange-50 transition duration-150 ease-in-out']) }}>{{ $slot }}</a>
+{{-- Link item; full-width clickable element with hover/focus styles --}}
+
+<a {{ $attributes->merge(['class' => 'block w-full px-4 py-2 text-sm text-neutral-950 hover:bg-neutral-100 focus:outline-none focus:bg-neutral-100 transition duration-150 ease-in-out']) }}>
+    {{ $slot }}
+</a>

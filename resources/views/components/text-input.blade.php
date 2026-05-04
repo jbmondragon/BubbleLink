@@ -1,3 +1,7 @@
 @props(['disabled' => false])
 
-<input @disabled($disabled) {{ $attributes->merge(['class' => 'rounded-2xl border-orange-200 bg-white/90 text-teal-950 shadow-sm focus:border-teal-600 focus:ring-teal-600']) }}>
+{{-- Text input with rounded styling and focus/disabled states --}}
+<input @disabled($disabled)
+    {{ $attributes->merge([
+        'class' => 'rounded-2xl border-neutral-300 bg-white/90 text-neutral-950 shadow-sm focus:border-neutral-900 focus:ring-neutral-900'
+    ]) }}>

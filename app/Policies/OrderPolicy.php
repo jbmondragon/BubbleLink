@@ -30,10 +30,6 @@ class OrderPolicy
 
     private function hasShopOrderAccess(User $user, Shop $shop): bool
     {
-        return $user->memberships()
-            ->where('organization_id', $shop->organization_id)
-            ->whereIn('role', ['manager', 'staff'])
-            ->where('shop_id', $shop->id)
-            ->exists();
+        return $shop->owner_user_id === $user->id;
     }
 }

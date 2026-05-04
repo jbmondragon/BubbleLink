@@ -2,11 +2,9 @@
 
 namespace App\Providers;
 
-use App\Models\Membership;
 use App\Models\Order;
 use App\Models\Shop;
 use App\Models\ShopService;
-use App\Policies\MembershipPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\ShopPolicy;
 use App\Policies\ShopServicePolicy;
@@ -32,7 +30,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Shop::class, ShopPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
-        Gate::policy(Membership::class, MembershipPolicy::class);
         Gate::policy(ShopService::class, ShopServicePolicy::class);
 
         if ($request->header('x-forwarded-proto') === 'https') {

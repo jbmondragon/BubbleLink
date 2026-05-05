@@ -67,34 +67,44 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $duplicateServices = DB::table('services')
-            ->select('name')
-            ->groupBy('name')
-            ->havingRaw('count(*) > 1')
-            ->pluck('name');
+        if (Schema::hasTable('services') && Schema::hasColumn('services', 'organization_id')) {
+            $duplicateServices = DB::table('services')
+                ->select('name')
+                ->groupBy('name')
+                ->havingRaw('count(*) > 1')
+                ->pluck('name');
 
-        foreach ($duplicateServices as $name) {
-            $services = DB::table('services')
-                ->where('name', $name)
-                ->orderBy('id')
-                ->get(['id']);
+            foreach ($duplicateServices as $name) {
+                $services = DB::table('services')
+                    ->where('name', $name)
+                    ->orderBy('id')
+                    ->get(['id']);
 
-            $primaryServiceId = $services->first()->id;
+                $primaryServiceId = $services->first()->id;
 
-            foreach ($services->slice(1) as $service) {
-                DB::table('shop_services')
-                    ->where('service_id', $service->id)
-                    ->update(['service_id' => $primaryServiceId]);
+                foreach ($services->slice(1) as $service) {
+                    DB::table('shop_services')
+                        ->where('service_id', $service->id)
+                        ->update(['service_id' => $primaryServiceId]);
 
-                DB::table('services')->where('id', $service->id)->delete();
+                    DB::table('services')->where('id', $service->id)->delete();
+                }
             }
-        }
 
-        Schema::table('services', function (Blueprint $table) {
-            $table->dropUnique('services_organization_id_name_unique');
-            $table->dropForeign(['organization_id']);
-            $table->dropColumn('organization_id');
-            $table->unique('name');
-        });
+            Schema::table('services', function (Blueprint $table) {
+                if (Schema::hasIndex('services', 'services_organization_id_name_unique')) {
+                    $table->dropUnique('services_organization_id_name_unique');
+                }
+                
+                // Check if FK exists before dropping
+                $fkExists = collect(DB::select("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'services' AND COLUMN_NAME = 'organization_id' AND REFERENCED_TABLE_NAME IS NOT NULL"))->isNotEmpty();
+                if ($fkExists) {
+                    $table->dropForeign(['organization_id']);
+                }
+                
+                $table->dropColumn('organization_id');
+                $table->unique('name');
+            });
+        }
     }
 };

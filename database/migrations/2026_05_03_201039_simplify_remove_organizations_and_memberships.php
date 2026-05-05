@@ -50,11 +50,29 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasColumn('services', 'organization_id')) {
+        $hasOrgId = collect(DB::select("
+            SELECT COLUMN_NAME 
+            FROM information_schema.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'services' 
+            AND COLUMN_NAME = 'organization_id'
+        "))->isNotEmpty();
+
+        if ($hasOrgId) {
             // Check if FK still exists before trying to drop it
             $fkExists = collect(DB::select("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'services' AND COLUMN_NAME = 'organization_id' AND REFERENCED_TABLE_NAME IS NOT NULL"))->isNotEmpty();
             if ($fkExists) {
                 DB::statement('ALTER TABLE services DROP FOREIGN KEY services_organization_id_foreign');
+            }
+            // Drop the unique index that includes organization_id
+            $uniqueIndexExists = collect(DB::select("
+                SELECT INDEX_NAME FROM information_schema.STATISTICS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'services' 
+                AND INDEX_NAME = 'services_organization_id_name_unique'
+            "))->isNotEmpty();
+            if ($uniqueIndexExists) {
+                DB::statement('ALTER TABLE services DROP INDEX services_organization_id_name_unique');
             }
             Schema::table('services', function (Blueprint $table) {
                 $table->dropColumn('organization_id');
@@ -75,7 +93,15 @@ return new class extends Migration
             DB::statement('ALTER TABLE shops ADD CONSTRAINT shops_owner_user_id_foreign FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE');
         }
 
-        if (Schema::hasColumn('shops', 'organization_id')) {
+        $shopHasOrgId = collect(DB::select("
+            SELECT COLUMN_NAME 
+            FROM information_schema.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'shops' 
+            AND COLUMN_NAME = 'organization_id'
+        "))->isNotEmpty();
+
+        if ($shopHasOrgId) {
             $shopOrganizationForeignKeyExists = collect(DB::select("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'shops' AND COLUMN_NAME = 'organization_id' AND REFERENCED_TABLE_NAME IS NOT NULL"))->isNotEmpty();
             if ($shopOrganizationForeignKeyExists) {
                 DB::statement('ALTER TABLE shops DROP FOREIGN KEY shops_organization_id_foreign');
@@ -92,9 +118,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::dropIfExists('organizations');
         Schema::create('organizations', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedBigInteger('owner_user_id');
+            $table->unsignedInteger('owner_user_id');
             $table->string('name');
             $table->timestamp('created_at')->nullable();
             $table->foreign('owner_user_id')->references('id')->on('users')->cascadeOnDelete();
@@ -116,7 +143,7 @@ return new class extends Migration
 
         Schema::create('memberships', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedInteger('user_id');
             $table->unsignedInteger('organization_id');
             $table->unsignedInteger('shop_id')->nullable();
             $table->string('role');

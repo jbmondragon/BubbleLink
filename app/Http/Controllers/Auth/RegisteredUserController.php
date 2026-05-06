@@ -13,6 +13,15 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    /*******************************************************************************************************************
+     *  USER STORY 1: USER REGISTRATION
+     *
+     *  Handles user registration for both customers and shop owners.
+     *  Allows customers to create accounts and securely authenticate into the platform to access services and manage orders.
+     *  Allows shop owners to register their shops and wait for admin approval before accessing the platform.
+     *
+     * *******************************************************************************************************************/
+
     // Show customer registration form
     public function createCustomer(): View
     {

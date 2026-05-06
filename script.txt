@@ -1,0 +1,405 @@
+BUBBLELINK LIVE DEMONSTRATION SCRIPT
+
+Title: Project Demonstration (Live Demo)
+System: BubbleLink Laundry Service Platform
+Presentation Format: Formal live demo script with step-by-step process, code references, directories, and explanation notes
+
+=====================================================================
+1. OPENING SCRIPT
+=====================================================================
+
+Good day. We are the proponents of BubbleLink, a laundry service platform developed to help customers browse laundry shops, view services and pricing, place orders online, and track their own transactions inside the system.
+
+For this live demonstration, we will present the actual working functionality of the application. We will not rely on screenshots or slides. Instead, we will demonstrate the live system and explain how the frontend, backend, and database work together.
+
+During this demonstration, we will show the following:
+
+1. Customer registration or login using an existing account
+2. Public browsing of available laundry shops
+3. Viewing detailed shop information, including services and pricing
+4. Interactive frontend behavior during order placement
+5. Frontend actions triggering requests to Laravel routes and controllers
+6. How backend controllers interact with the database through Eloquent models
+7. Persistent and user-specific customer data through order history
+
+Important clarification:
+This project is primarily a server-rendered Laravel application enhanced with Alpine.js for frontend interactivity. It demonstrates dynamic user interactions and HTTP requests to Laravel controllers. However, it does not currently use a separate REST API module or a dedicated routes/api.php implementation.
+
+=====================================================================
+2. DEMO ACCOUNTS
+=====================================================================
+
+If we want to use seeded accounts instead of creating a new one during the presentation, we may use the following demo credentials:
+
+Customer Account:
+Email: bob@example.com
+Password: password
+
+Shop Owner Account:
+Email: john@example.com
+Password: password
+
+Platform Admin Account:
+Email: admin@bubblelink.test
+Password: password
+
+Seeder reference:
+Directory:
+C:\xampp\htdocs\php-practice\bubblelink\database\seeders\
+
+File:
+C:\xampp\htdocs\php-practice\bubblelink\database\seeders\DatabaseSeeder.php
+
+=====================================================================
+3. STEP-BY-STEP LIVE DEMO FLOW
+=====================================================================
+
+--------------------------------------------------
+STEP 1. OPEN THE PUBLIC SHOP MARKETPLACE
+--------------------------------------------------
+
+What to do during the demo:
+1. Launch the application in the browser.
+2. Open the home page.
+3. Show that the system already displays available laundry shops even before logging in.
+4. Explain that the public marketplace allows customers to browse available shops and search for services.
+
+What to say:
+We begin on the public shop marketplace. This page is available to users even before login. It displays the available laundry shops on the platform, along with their addresses, service previews, and starting prices. This feature allows customers to browse and compare options before placing an order.
+
+Code responsible for this feature:
+Controller:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerShopController.php
+
+Route file:
+C:\xampp\htdocs\php-practice\bubblelink\routes\web.php
+
+View file:
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\shops\index.blade.php
+
+Model references:
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\Shop.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\ShopService.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\Service.php
+
+Code explanation:
+The CustomerShopController index() method loads shops together with their related services using Eloquent relationships. It also supports search filtering by shop name, address, description, and service name. The processed shop data is passed to the Blade view, where the customer sees the marketplace listing.
+
+--------------------------------------------------
+STEP 2. REGISTER A NEW CUSTOMER ACCOUNT OR LOG IN
+--------------------------------------------------
+
+Option A: Register a new customer account
+What to do during the demo:
+1. Open the customer registration page.
+2. Fill in the customer name, email, contact number, and password.
+3. Submit the registration form.
+4. Show that the system redirects the user back to the login page with a success message.
+
+What to say:
+Here we demonstrate account registration. A customer can create an account by providing basic information such as name, email, contact number, and password. Once submitted, the system validates the input, creates a new user record in the database, and redirects the user to the login page.
+
+Option B: Log in using an existing customer account
+What to do during the demo:
+1. Open the customer login page.
+2. Enter the customer credentials.
+3. Submit the login form.
+4. Show that the user is redirected to the customer shop listing page.
+
+What to say:
+This demonstrates authentication. Once the customer credentials are validated by the backend, the system authenticates the session and redirects the customer to the main shop listing page.
+
+Code responsible for registration and login:
+Routes:
+C:\xampp\htdocs\php-practice\bubblelink\routes\auth.php
+
+Registration controller:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\Auth\RegisteredUserController.php
+
+Login controller:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\Auth\AuthenticatedSessionController.php
+
+Registration view:
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\auth\register.blade.php
+
+Login view:
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\auth\login.blade.php
+
+Model used:
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\User.php
+
+Code explanation:
+The RegisteredUserController store() method validates the form, creates a new User record, hashes the password, and redirects the user to the login page. The AuthenticatedSessionController store() method authenticates the login credentials and redirects the customer to the customer shop listing route.
+
+--------------------------------------------------
+STEP 3. SEARCH AND BROWSE AVAILABLE SHOPS
+--------------------------------------------------
+
+What to do during the demo:
+1. Use the search field in the marketplace page.
+2. Enter a keyword such as a shop name or service name.
+3. Show that the visible list of shops changes according to the search.
+
+What to say:
+This demonstrates the browsing and search capability of the system. Customers can search by shop name, location, description, or even service type. The backend processes the search term and filters the available shops accordingly.
+
+Code responsible:
+Controller:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerShopController.php
+
+View:
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\shops\index.blade.php
+
+Code explanation:
+The index() method retrieves the search term from the request and uses Eloquent query conditions to filter shops and related services. The filtered data is then displayed in the Blade view.
+
+--------------------------------------------------
+STEP 4. OPEN A SHOP DETAIL PAGE
+--------------------------------------------------
+
+What to do during the demo:
+1. Click the View Details button for one shop.
+2. Show the shop detail page.
+3. Point out the shop name, address, contact number, services, and prices.
+
+What to say:
+This page displays the complete details of a selected laundry shop. Customers can review the available services and their prices before deciding to place an order.
+
+Code responsible:
+Controller:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerShopController.php
+
+View:
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\shops\show.blade.php
+
+Models:
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\Shop.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\ShopService.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\Service.php
+
+Code explanation:
+The show() method loads a single shop together with its related shop services and service names. The view then renders a table showing the service names and corresponding prices.
+
+--------------------------------------------------
+STEP 5. DEMONSTRATE FRONTEND INTERACTIVITY ON THE ORDER FORM
+--------------------------------------------------
+
+What to do during the demo:
+1. Click Place Order.
+2. Show the order form.
+3. Change the selected service and observe the price display update.
+4. Change the service mode between pickup, delivery, both, and walk-in.
+5. Show that pickup and delivery fields appear or disappear depending on the selected mode.
+
+What to say:
+This part demonstrates dynamic frontend behavior. The form responds immediately to customer selections. When the selected service changes, the estimated price updates. When the service mode changes, the relevant address and schedule fields appear or disappear. This improves usability because the customer only sees fields relevant to the chosen service mode.
+
+Important clarification for panelists:
+This is frontend interactivity implemented through Alpine.js. It is not a separate AJAX endpoint. The interface updates immediately on the client side before form submission.
+
+Code responsible:
+Order form view:
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\orders\create.blade.php
+
+Frontend Alpine components:
+C:\xampp\htdocs\php-practice\bubblelink\resources\js\alpine-components.js
+
+Frontend runtime entry:
+C:\xampp\htdocs\php-practice\bubblelink\resources\js\app.js
+
+Axios/bootstrap config:
+C:\xampp\htdocs\php-practice\bubblelink\resources\js\bootstrap.js
+
+Code explanation:
+The order form uses x-data with the Alpine component customerOrderForm. This component contains helper methods such as updateSelectedPrice(), needsPickup(), and needsDelivery(). These methods control the estimated price display and conditional form field visibility.
+
+--------------------------------------------------
+STEP 6. SUBMIT A CUSTOMER ORDER
+--------------------------------------------------
+
+What to do during the demo:
+1. Fill in the order form.
+2. Choose a service.
+3. Choose a service mode.
+4. Enter the required address and scheduling information.
+5. Submit the order.
+6. Show that the system redirects to the order detail page with a success message.
+
+What to say:
+At this point, the customer submits an order. The frontend sends an HTTP POST request to the Laravel backend. The backend validates the input, verifies that the selected service belongs to the selected shop, and then stores the order in the database.
+
+Code responsible:
+Routes:
+C:\xampp\htdocs\php-practice\bubblelink\routes\web.php
+
+Controller:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerOrderController.php
+
+Model:
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\Order.php
+
+Related models:
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\Shop.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\ShopService.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\User.php
+
+Code explanation:
+The CustomerOrderController store() method validates the request, ensures the selected shop service belongs to the selected shop, calculates which fields are needed based on the service mode, and finally creates a new Order record. The customer_id is assigned from the authenticated user, making the order user-specific.
+
+--------------------------------------------------
+STEP 7. SHOW PERSISTENT USER-SPECIFIC DATA THROUGH MY ORDERS
+--------------------------------------------------
+
+What to do during the demo:
+1. Open My Orders.
+2. Show the order that was just created.
+3. Refresh the page or log out and log back in.
+4. Return to My Orders.
+5. Show that the order still exists.
+
+What to say:
+This demonstrates persistent, user-specific data. The order is stored permanently in the database and linked to the currently logged-in customer. That is why the same customer continues to see the same order even after refreshing or logging back in.
+
+Code responsible:
+Controller:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerOrderController.php
+
+View:
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\orders\index.blade.php
+
+Models:
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\User.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\Order.php
+
+Code explanation:
+The CustomerOrderController index() method uses $request->user()->orders() to retrieve only the orders belonging to the currently authenticated customer. This is what makes the data user-specific and persistent.
+
+--------------------------------------------------
+STEP 8. EXPLAIN HOW THE BACKEND INTERACTS WITH THE DATABASE
+--------------------------------------------------
+
+What to say:
+The backend uses Laravel Eloquent ORM to interact with the database. Instead of writing raw SQL in the controller, the system uses models and relationships.
+
+Examples:
+
+1. User registration:
+The system creates a new user through User::create(...)
+File:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\Auth\RegisteredUserController.php
+
+2. Shop listing:
+The system loads shops and related services through Shop::with('shopServices.service')
+File:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerShopController.php
+
+3. Order creation:
+The system creates a new record through Order::create(...)
+File:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerOrderController.php
+
+4. User-specific order history:
+The system loads only the authenticated user’s orders through $request->user()->orders()
+Files:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerOrderController.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\User.php
+
+=====================================================================
+4. EXPLANATION FOR AJAX-BASED INTERACTIONS AND API CALLS
+=====================================================================
+
+Use this exact explanation during the demo if the panel asks about AJAX or API calls:
+
+Our project currently follows a server-rendered Laravel architecture. Dynamic user interactions are handled on the frontend through Alpine.js. For example, the order form updates price and form fields instantly based on user selection. However, business actions such as registration, login, and order placement are processed through standard Laravel web routes and controller methods rather than through a dedicated REST API module.
+
+Additional clarification:
+There is no separate routes/api.php file in the current project. Therefore, when we demonstrate frontend actions triggering backend processing, we are demonstrating HTTP form requests to Laravel controllers rather than standalone API endpoints.
+
+=====================================================================
+5. IMPORTANT DIRECTORIES TO OPEN DURING THE DEMO
+=====================================================================
+
+Auth controllers:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\Auth\
+
+Customer controllers:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\
+
+Models:
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\
+
+Routes:
+C:\xampp\htdocs\php-practice\bubblelink\routes\
+
+Auth views:
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\auth\
+
+Customer views:
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\
+
+JavaScript / Alpine frontend logic:
+C:\xampp\htdocs\php-practice\bubblelink\resources\js\
+
+Database seeders:
+C:\xampp\htdocs\php-practice\bubblelink\database\seeders\
+
+=====================================================================
+6. CORE FILES TO SHOW ON SCREEN
+=====================================================================
+
+Authentication:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\Auth\RegisteredUserController.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\Auth\AuthenticatedSessionController.php
+C:\xampp\htdocs\php-practice\bubblelink\routes\auth.php
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\auth\register.blade.php
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\auth\login.blade.php
+
+Shop browsing:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerShopController.php
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\shops\index.blade.php
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\shops\show.blade.php
+
+Order placement:
+C:\xampp\htdocs\php-practice\bubblelink\app\Http\Controllers\CustomerOrderController.php
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\orders\create.blade.php
+C:\xampp\htdocs\php-practice\bubblelink\resources\views\customer\orders\index.blade.php
+
+Models:
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\User.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\Shop.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\ShopService.php
+C:\xampp\htdocs\php-practice\bubblelink\app\Models\Order.php
+
+Frontend interaction:
+C:\xampp\htdocs\php-practice\bubblelink\resources\js\alpine-components.js
+C:\xampp\htdocs\php-practice\bubblelink\resources\js\app.js
+C:\xampp\htdocs\php-practice\bubblelink\resources\js\bootstrap.js
+
+=====================================================================
+7. IMPORTANT DETAILS TO REMEMBER DURING THE DEMO
+=====================================================================
+
+1. Be honest about the architecture.
+Do not say that the system uses a separate API module if it does not. Say that the app uses Laravel web routes and Alpine.js-based frontend interactivity.
+
+2. Emphasize real functionality.
+Show actual page navigation, actual form submission, and actual saved records in the order history.
+
+3. Stress persistence.
+When the order is saved, explain that it is linked to the currently authenticated customer through customer_id.
+
+4. Stress user-specific data.
+Make it clear that customers only see their own orders.
+
+5. If asked about database interaction, explain the role of Eloquent models.
+Examples: User, Shop, ShopService, and Order.
+
+=====================================================================
+8. CLOSING SCRIPT
+=====================================================================
+
+In summary, we have demonstrated the live functionality of the BubbleLink platform. We showed user authentication, public browsing of laundry shops, detailed viewing of services and pricing, dynamic frontend interactivity in the customer order form, backend processing of user requests, database interaction through Laravel Eloquent, and persistent user-specific order history.
+
+These features demonstrate that the system is functional, interactive, and capable of supporting real customer transactions in a live environment.
+
+END OF SCRIPT

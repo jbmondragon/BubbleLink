@@ -39,7 +39,7 @@
                                 Place order
                             </a>
                         @else
-                            <a href="{{ route('login') }}" class="customer-button customer-button--dark">
+                            <a href="{{ route('unified.login') }}" class="customer-button customer-button--dark">
                                 Log in to order
                             </a>
                         @endauth

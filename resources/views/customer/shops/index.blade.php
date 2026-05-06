@@ -21,15 +21,9 @@
                         <p class="mt-3 max-w-2xl text-sm text-neutral-200">Search the catalog, open a shop page, review pricing, then place your order using your BubbleLink account.</p>
 
                         @guest
-                            <div class="customer-hero-actions sm:hidden min-[480px]:grid-cols-3">
-                                <a href="{{ route('customer.login') }}" class="customer-button customer-button--hero-light">
-                                    Customer Login
-                                </a>
-                                <a href="{{ route('admin.login') }}" class="customer-button customer-button--hero-dark">
-                                    Shop Owner Login
-                                </a>
-                                <a href="{{ route('platform-admin.login') }}" class="customer-button customer-button--hero-outline">
-                                    Admin Login
+                            <div class="customer-hero-actions sm:hidden">
+                                <a href="{{ route('unified.login') }}" class="customer-button customer-button--hero-light">
+                                    Login
                                 </a>
                             </div>
                         @endguest

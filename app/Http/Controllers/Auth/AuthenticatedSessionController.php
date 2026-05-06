@@ -11,6 +11,14 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
+
+    // ===== UNIFIED LOGIN VIEW =====
+
+    public function createUnified(): View
+    {
+        return view('auth.unified_login');
+    }
+
     // ===== LOGIN VIEWS =====
 
     public function createCustomer(): View

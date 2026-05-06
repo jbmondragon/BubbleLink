@@ -43,6 +43,9 @@ Route::middleware('guest')->group(function () use ($registerGuestAuthRoute) {
     $registerGuestAuthRoute('customer/register', [RegisteredUserController::class, 'createCustomer'], 'customer.register');
     $registerGuestAuthRoute('shop-owner/register', [RegisteredUserController::class, 'createAdmin'], 'admin.register');
 
+    // Unified login route
+    $registerGuestAuthRoute('unified-login', [AuthenticatedSessionController::class, 'createUnified'], 'unified.login');
+
     $registerGuestAuthRoute('login', [AuthenticatedSessionController::class, 'createCustomer'], 'login');
     $registerGuestAuthRoute('customer/login', [AuthenticatedSessionController::class, 'createCustomer'], 'customer.login');
     $registerGuestAuthRoute('shop-owner/login', [AuthenticatedSessionController::class, 'createAdmin'], 'admin.login');

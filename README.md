@@ -1,100 +1,51 @@
 # BubbleLink
 
-BubbleLink is a Laravel 12 laundry service platform with three live surfaces:
-customer browsing and ordering, direct shop-owner operations, and platform-admin
-approval of new shop owners.
+_This project is developed by **Jake B. Mondragon**, **Louis Kent S. Dela Cruz**, and **Harry Gomez**_
 
-## Portals
+## I. Project Description
 
-| Portal         | URL                     | Purpose                                                        |
-| -------------- | ----------------------- | -------------------------------------------------------------- |
-| Customer       | `/customer/login`       | Browse shops, place orders, and review order history           |
-| Shop Owner     | `/shop-owner/login`     | Manage shops, fixed services, shop-service pricing, and orders |
-| Platform Admin | `/platform-admin/login` | Review and approve or reject shop owner registrations          |
+**BubbleLink** is a web-based platform that aims to connect customers and nearby laundry shops that offer pickup and delivery services. The proposed system aims to enable customers to browse existing laundry shops and compare service prices, and schedule a pickup or delivery directly through online booking.
 
-Each portal has its own entry route, but the app now uses a simpler runtime model:
-shop owners act directly on their shops. The old organization, membership, guided
-setup, and welcome-page flows are no longer part of the live app experience.
+### User Types
 
-Default customer auth is also available at `/login` and `/register`.
+- **Customer** → browse, order, view history
+- **Shop Owner** → manage shops, handle orders
+- **Admin** → approve/reject shop registrations
+
+---
+
+## II. Rationale
+
+Laundry shops in Tacloban still operate in traditional methods such as walk-in customers, phone messages and calls for service requests. These methods often lead to inefficient order management since existing methods are prone to error or mismanagement due to high effort needed for checking and manually tracking all of the laundry requests by different users. Customers also face difficulty identifying which laundromats offer pickup services, comparing prices, or tracking the progress of their laundry orders. This lack of a centralized system creates inconvenience for both customers and laundromat operators.
+The proposed system addresses these challenges by providing a structured platform where customers can easily find laundromats, schedule pickups, and track orders. For laundromat owners, the system improves operational efficiency by organizing incoming service requests and allowing them to manage orders digitally.
+
+### Impact (SDGs)
+
+Additionally, the system supports small local businesses by providing laundromats with a digital presence and expanding their customer reach. It aligns with the following Sustainable Development Goals:
+
+- **SDG 8** → Decent Work and Economic Growth by helping small businesses improve productivity and generate more income opportunities.
+- **SDG 9** → Industry, Innovation and Infrastructure through the adoption of digital solutions that modernize traditional laundry service operations.
+- **SDG 11** → Sustainable Cities and Communities by fostering more connected, efficient, and service-oriented local communities.
+
+---
 
 ## Requirements
 
-- PHP 8.2+
-- Composer
-- Node.js and npm
-- MySQL or another Laravel-supported database
+- PHP 8.2+, Composer
+- Node + npm
+- MySQL / MariaDB
+- XAMPP
 
-## Local Setup
+---
+
+## Setup (Quick)
 
 ```bash
 composer install
 cp .env.example .env
 php artisan key:generate
-php artisan migrate
-php artisan db:seed
+php artisan migrate --seed
 npm install
 npm run build
 php artisan serve
-```
-
-Windows PowerShell note:
-use `npm.cmd run build` if PowerShell blocks `npm.ps1`.
-
-## Seed Data
-
-The database seeder currently creates one compact demo graph:
-
-- shop owner: `john@example.com` / `password`
-- customer: `bob@example.com` / `password`
-- platform admin: `admin@bubblelink.test` / `password`
-- one owner shop with one priced service and one sample order
-
-## Live Functional Scope
-
-### Customer
-
-- browse public shop listings
-- view shop details and available services
-- place orders using pickup, delivery, both, or walk-in
-- review order history and order details
-- access order history from the top navigation while signed in
-
-### Shop Owner
-
-- create and edit shops
-- work from a fixed per-shop service catalog
-- assign and remove shop-service pricing
-- review incoming orders
-- create internal orders
-- update order status, weight, and payment state
-
-### Platform Admin
-
-- review pending shop owner registrations
-- approve or reject requests
-- create an audit trail of approval decisions
-- notify owners about approval outcomes
-
-## Auth Flow
-
-- customer registration and login are available through customer routes
-- shop owner registration captures first-shop details during registration
-- platform admin approval unlocks the owner workspace
-- approved owners go directly to the business dashboard
-- profile management remains active
-
-## Verification Commands
-
-```bash
-php artisan test --compact
-npm.cmd run build
-```
-
-Focused regression checks that match the current live flows:
-
-```bash
-php artisan test --compact --filter=CustomerOrderingTest
-php artisan test --compact --filter=OwnerDashboardTest
-php artisan test --compact --filter=OwnerAccountApprovalTest
 ```

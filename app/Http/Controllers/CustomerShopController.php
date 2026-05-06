@@ -2,67 +2,54 @@
 
 namespace App\Http\Controllers;
 
-/**
- * Handles customer-facing shop discovery, filtering, and shop detail
- * rendering.
- */
-
 use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CustomerShopController extends Controller
 {
+    // List all shops (with search): User Story 2 and 3
     public function index(Request $request): View
     {
-        $search = trim((string) $request->string('search'));
+        $search = trim($request->input('search', ''));
 
-        $shops = Shop::query()
-            ->with(['shopServices.service'])
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($builder) use ($search) {
-                    $builder->where('shop_name', 'like', '%'.$search.'%')
-                        ->orWhere('address', 'like', '%'.$search.'%')
-                        ->orWhere('description', 'like', '%'.$search.'%')
-                        ->orWhereHas('shopServices.service', function ($serviceQuery) use ($search) {
-                            $serviceQuery->where('name', 'like', '%'.$search.'%');
-                        });
-                });
+        $shops = Shop::with('shopServices.service')
+            ->when($search, function ($q) use ($search) {
+                $q->where('shop_name', 'like', "%$search%")
+                  ->orWhere('address', 'like', "%$search%")
+                  ->orWhere('description', 'like', "%$search%")
+                  ->orWhereHas('shopServices.service', function ($q) use ($search) {
+                      $q->where('name', 'like', "%$search%");
+                  });
             })
             ->orderBy('shop_name')
             ->get();
 
-        $shopCards = $shops->map(function (Shop $shop) {
-            $featuredServices = $shop->shopServices
-                ->sortBy(fn ($shopService) => $shopService->service->name)
-                ->take(3)
-                ->values();
-
+        $shopCards = $shops->map(function ($shop) {
             return [
                 'shop' => $shop,
                 'serviceCount' => $shop->shopServices->count(),
-                'featuredServices' => $featuredServices,
+                'featuredServices' => $shop->shopServices
+                    ->sortBy('service.name')
+                    ->take(3)
+                    ->values(),
                 'startingPrice' => $shop->shopServices->min('price'),
             ];
         });
 
-        return view('customer.shops.index', [
-            'shopCards' => $shopCards,
-            'search' => $search,
-        ]);
+        return view('customer.shops.index', compact('shopCards', 'search'));
     }
 
+    // Show single shop details
     public function show(Shop $shop): View
     {
-        $shop = Shop::query()
-            ->with(['shopServices.service'])
-            ->findOrFail($shop->id);
+        $shop->load('shopServices.service');
 
         $services = $shop->shopServices
-            ->sortBy(fn ($shopService) => $shopService->service->name)
+            ->sortBy('service.name')
             ->values()
-            ->map(fn ($shopService) => [
-                'shopService' => $shopService,
+            ->map(fn ($s) => [
+                'shopService' => $s,
                 'bookingSummary' => 'Available for pickup, delivery, or both',
             ]);
 

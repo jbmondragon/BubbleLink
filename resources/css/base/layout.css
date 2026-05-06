@@ -1127,16 +1127,20 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: 9999px;
-		padding: 0.625rem 1rem;
-		font-size: 0.875rem;
-		font-weight: 600;
+		min-height: 3.5rem;
+		padding: 0.875rem 1.5rem;
+		font-size: 0.95rem;
+		font-weight: 700;
+		line-height: 1;
+		white-space: nowrap;
 		text-decoration: none;
-		transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+		transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
 		border: 1px solid transparent;
 	}
 
 	.customer-button:hover {
 		transform: translateY(-1px);
+		box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
 	}
 
 	.customer-button--outline {
@@ -1151,21 +1155,21 @@
 	}
 
 	.customer-button--dark {
-		background: rgb(17 24 39);
+		background: rgb(31 41 55);
 		color: rgb(255 255 255);
 	}
 
 	.customer-button--dark:hover {
-		background: rgb(31 41 55);
+		background: rgb(15 23 42);
 	}
 
 	.customer-button--success {
-		background: rgb(17 24 39);
+		background: rgb(31 41 55);
 		color: rgb(255 255 255);
 	}
 
 	.customer-button--success:hover {
-		background: rgb(31 41 55);
+		background: rgb(15 23 42);
 	}
 
 	.customer-button--soft-success {

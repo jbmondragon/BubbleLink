@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         \DB::table('shops')->insert([
-            ['id' => 1, 'owner_user_id' => 1, 'shop_name' => 'QuickClean Manila', 'address' => 'Manila City', 'contact_number' => '0287001001', 'description' => 'Pickup, delivery, and same-day folding for busy households.', 'created_at' => now()],
+            ['id' => 1, 'owner_user_id' => 1, 'shop_name' => 'Sofia\'s Bubble', 'address' => 'Santo Nino St. Tacloban City', 'contact_number' => '0287001001', 'description' => 'Pickup, delivery, and same-day folding for busy households.', 'created_at' => now()],
         ]);
 
         \DB::table('services')->insert([
@@ -40,8 +40,8 @@ class DatabaseSeeder extends Seeder
                 'shop_id' => 1,
                 'shop_service_id' => 1,
                 'service_mode' => 'both',
-                'pickup_address' => '124 España Boulevard, Manila',
-                'delivery_address' => '124 España Boulevard, Manila',
+                'pickup_address' => 'University of the Philippines Tacloban, Tacloban City',
+                'delivery_address' => 'University of the Philippines Tacloban, Tacloban City',
                 'weight' => 4.50,
                 'pickup_datetime' => now()->subDay(),
                 'delivery_datetime' => now()->addDay(),

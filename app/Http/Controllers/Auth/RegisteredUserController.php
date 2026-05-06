@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
@@ -100,9 +99,9 @@ class RegisteredUserController extends Controller
                 ->with('success', 'Shop owner registration submitted. Wait for platform admin approval before logging in.');
         }
 
-        Auth::login($user);
-
-        return redirect(route('customer.shops.index', absolute: false));
+        return redirect()
+            ->route('customer.login')
+            ->with('status', 'Registration success, log-in using your log-in credentials.');
     }
 
     private function renderRegisterView(

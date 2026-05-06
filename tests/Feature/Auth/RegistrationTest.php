@@ -28,9 +28,10 @@ test('new users can register', function () {
         'password_confirmation' => 'password',
     ]);
 
-    $this->assertAuthenticated();
+    $this->assertGuest();
     expect(User::query()->where('email', 'test@example.com')->value('contact_number'))->toBe('09123456789');
-    $response->assertRedirect(route('customer.shops.index', absolute: false));
+    $response->assertRedirect(route('customer.login', absolute: false));
+    $response->assertSessionHas('status', 'Registration success, log-in using your log-in credentials.');
 });
 
 test('new shop owners can register and await approval', function () {

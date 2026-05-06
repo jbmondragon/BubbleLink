@@ -56,6 +56,7 @@
                                 <thead>
                                     <tr>
                                         <th>Service</th>
+                                        <th>Max Weight (kg)</th>
                                         <th>Price</th>
                                     </tr>
                                 </thead>
@@ -63,6 +64,7 @@
                                     @foreach ($services as $serviceCard)
                                         <tr>
                                             <td class="font-semibold text-slate-900">{{ $serviceCard['shopService']->service->name }}</td>
+                                            <td class="text-sm font-semibold text-slate-900">{{ number_format((float) $serviceCard['shopService']->max_weight_kg, 2) }}</td>
                                             <td class="text-sm font-semibold text-slate-900">PHP {{ number_format((float) $serviceCard['shopService']->price, 2) }}</td>
                                         </tr>
                                     @endforeach

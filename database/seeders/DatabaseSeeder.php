@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         \DB::table('shop_services')->insert([
-            ['id' => 1, 'shop_id' => 1, 'service_id' => 1, 'price' => 100.00],
+            ['id' => 1, 'shop_id' => 1, 'service_id' => 1, 'max_weight_kg' => 8.00, 'price' => 100.00],
         ]);
 
         \DB::table('orders')->insert([

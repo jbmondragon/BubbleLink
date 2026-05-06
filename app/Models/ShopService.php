@@ -16,6 +16,7 @@ class ShopService extends Model
     protected $fillable = [
         'shop_id',
         'service_id',
+        'max_weight_kg',
         'price',
     ];
 
@@ -23,6 +24,7 @@ class ShopService extends Model
     {
         return [
             'price' => 'decimal:2',
+            'max_weight_kg' => 'decimal:2',
         ];
     }
 

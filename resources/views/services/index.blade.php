@@ -63,6 +63,11 @@
                         <x-input-error :messages="$shopServiceCreateErrors->get('service_id')" class="mt-2" />
                     </div>
                     <div>
+                        <x-input-label for="max_weight_kg" value="Max Weight" />
+                        <x-text-input id="max_weight_kg" name="max_weight_kg" type="number" step="0.01" min="0" class="mt-1 w-full" :value="old('max_weight_kg')" required />
+                        <x-input-error :messages="$shopServiceCreateErrors->get('max_weight_kg')" class="mt-2" />
+                    </div>
+                    <div>
                         <x-input-label for="price" value="Price" />
                         <x-text-input id="price" name="price" type="number" step="0.01" min="0" class="mt-1 w-full" :value="old('price')" required />
                         <x-input-error :messages="$shopServiceCreateErrors->get('price')" class="mt-2" />
@@ -85,6 +90,7 @@
                                 <thead>
                                     <tr>
                                         <th>Service</th>
+                                        <th>Max Weight (kg)</th>
                                         <th>Price</th>
                                         <th>Action</th>
                                     </tr>
@@ -93,6 +99,7 @@
                                     @forelse($shop->shopServices as $shopService)
                                         <tr>
                                             <td>{{ $shopService->service->name }}</td>
+                                            <td>{{ number_format((float) $shopService->max_weight_kg, 2) }}</td>
                                             <td>₱{{ number_format((float) $shopService->price, 2) }}</td>
                                             <td>
                                                 <form method="POST" action="{{ route('shop-services.destroy', $shopService) }}" data-confirm-submit="Remove this service from the shop?">
@@ -104,7 +111,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="owner-table-empty">No services assigned yet.</td>
+                                            <td colspan="4" class="owner-table-empty">No services assigned yet.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

@@ -44,8 +44,8 @@
                         <p class="mt-2 text-lg font-semibold text-slate-900">PHP {{ number_format((float) $order->total_price, 2) }}</p>
                     </div>
                     <div>
-                        <p class="customer-eyebrow customer-eyebrow--muted">Recorded Weight</p>
-                        <p class="mt-2 text-lg font-semibold text-slate-900">{{ $order->weight !== null ? number_format((float) $order->weight, 2).' kg' : 'Pending shop measurement' }}</p>
+                        <p class="customer-eyebrow customer-eyebrow--muted">Number of Loads</p>
+                        <p class="mt-2 text-lg font-semibold text-slate-900">{{ $order->number_of_loads !== null ? $order->number_of_loads : 'Pending shop measurement' }}</p>
                     </div>
                 </div>
 

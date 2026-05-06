@@ -15,7 +15,7 @@ use Illuminate\Validation\Rule;
  * ShopServiceController
  *
  * Manages the assignment of services to shops:
- * - Adds (assigns) a service to a specific shop with pricing
+ * - Adds (assigns) a service to a specific shop with max load weight and pricing
  * - Ensures services are unique per shop
  * - Validates that services belong to the correct shop
  * - Removes assigned services from a shop
@@ -39,6 +39,7 @@ class ShopServiceController extends Controller
                 Rule::unique('shop_services')->where(fn ($query) => $query->where('shop_id', $request->integer('shop_id'))),
             ],
             'price' => 'required|numeric|min:0',
+            'max_weight_kg' => 'required|numeric|min:0',
         ]);
 
         $serviceExistsForShop = Service::query()

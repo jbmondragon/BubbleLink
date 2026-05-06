@@ -36,7 +36,7 @@
                         <select id="shop_service_id" name="shop_service_id" class="customer-form-control" x-on:change="updateSelectedPrice($event)" required>
                             @foreach ($services as $shopService)
                                 <option value="{{ $shopService->id }}" data-price="{{ number_format((float) $shopService->price, 2, '.', '') }}" @selected(old('shop_service_id') == $shopService->id)>
-                                    {{ $shopService->service->name }} · PHP {{ number_format((float) $shopService->price, 2) }}
+                                    {{ $shopService->service->name }} · PHP {{ number_format((float) $shopService->price, 2) }} · Max Weight: {{ number_format((float) $shopService->max_weight_kg, 2) }} kg
                                 </option>
                             @endforeach
                         </select>
@@ -47,7 +47,7 @@
 
                     <div class="customer-grid-two">
                         <div class="customer-form-note customer-form-note--bordered md:col-span-2">
-                            The shop team will weigh your laundry when they receive it and confirm the final recorded weight for this order.
+                            The shop team will weigh your laundry when they receive it and confirm the number of loads and weight for each load for this order.
                         </div>
 
                         <div>
@@ -106,9 +106,9 @@
 
                     <div class="customer-summary-band">
                         <div>
-                            <p class="customer-eyebrow text-neutral-700">Estimated price</p>
+                            <p class="customer-eyebrow text-neutral-700">Pricing per load</p>
                             <p class="mt-1 text-2xl font-semibold text-neutral-950">PHP <span x-text="selectedPrice"></span></p>
-                            <p class="customer-summary-band-copy">Final weight is confirmed by shop staff after drop-off or pickup.</p>
+                            <p class="customer-summary-band-copy">Number of loads is confirmed by shop staff after drop-off or pickup.</p>
                         </div>
 
                         <button type="submit" class="customer-button customer-button--success">

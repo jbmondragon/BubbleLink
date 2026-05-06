@@ -18,7 +18,7 @@
         @if ($showShopFields ?? false)
             <div class="flex justify-center pt-2">
                 <a
-                    href="{{ route('dashboard') }}"
+                    href="{{ route('customer.shops.home') }}"
                     class="inline-flex items-center px-4 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-[0.2em] hover:bg-neutral-800 focus:ring-2 focus:ring-neutral-400 transition"
                 >
                     Dashboard

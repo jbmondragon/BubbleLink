@@ -9,120 +9,98 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
-/**
- * Handles customer and shop-owner registration, including the owner approval
- * intake fields captured during sign-up.
- */
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
+    // Show customer registration form
     public function createCustomer(): View
     {
-
-        /**
-         * Build the shared registration view payload for the customer and shop-owner
-         * registration screens.
-         */
-        return $this->renderRegisterView(
-            heading: 'Customer registration',
-            description: 'Create a customer account to place and track laundry orders.',
-            formActionRoute: 'customer.register.store',
-            loginRoute: 'customer.login',
-            loginLabel: 'Already a customer?',
-            alternateRegisterRoute: 'admin.register',
-            alternateRegisterLabel: 'Need a shop owner account?',
-            showShopFields: false,
+        return $this->registerView(
+            'Customer registration',
+            'Create an account to place and track orders.',
+            'customer.register.store',
+            'customer.login',
+            'Already have an account?',
+            false
         );
     }
 
+    // Show shop owner registration form
     public function createAdmin(): View
     {
-        return $this->renderRegisterView(
-            heading: 'Shop Owner registration',
-            description: 'Create a shop owner account, submit your first shop details, and wait for platform admin approval before managing your laundry business.',
-            formActionRoute: 'admin.register.store',
-            loginRoute: 'admin.login',
-            loginLabel: 'Already registered as a shop owner?',
-            alternateRegisterRoute: 'customer.register',
-            alternateRegisterLabel: 'Need a customer account?',
-            showShopFields: true,
+        return $this->registerView(
+            'Shop Owner registration',
+            'Register your shop and wait for admin approval.',
+            'admin.register.store',
+            'admin.login',
+            'Already registered?',
+            true
         );
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws ValidationException
-     */
+    // Handle registration
     public function store(Request $request): RedirectResponse
     {
-        $isShopOwnerRegistration = $request->routeIs('admin.register.store');
+        $isOwner = $request->routeIs('admin.register.store');
 
         $rules = [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'contact_number' => ['nullable', 'string', 'max:255'],
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users',
+            'contact_number' => 'nullable|string|max:255',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ];
 
-        if ($isShopOwnerRegistration) {
-            $rules['shop_name'] = ['required', 'string', 'max:255'];
-            $rules['shop_address'] = ['required', 'string', 'max:255'];
-            $rules['shop_contact_number'] = ['nullable', 'string', 'max:255'];
-            $rules['shop_description'] = ['nullable', 'string', 'max:255'];
+        if ($isOwner) {
+            $rules += [
+                'shop_name' => 'required|string|max:255',
+                'shop_address' => 'required|string|max:255',
+                'shop_contact_number' => 'nullable|string|max:255',
+                'shop_description' => 'nullable|string|max:255',
+            ];
         }
 
-        $validated = $request->validate($rules);
+        $data = $request->validate($rules);
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'contact_number' => $validated['contact_number'] ?? null,
-            'password' => Hash::make($validated['password']),
-            'owner_registration_status' => $isShopOwnerRegistration ? 'pending' : null,
-            'pending_shop_name' => $isShopOwnerRegistration ? $validated['shop_name'] : null,
-            'pending_shop_address' => $isShopOwnerRegistration ? $validated['shop_address'] : null,
-            'pending_shop_contact_number' => $isShopOwnerRegistration ? ($validated['shop_contact_number'] ?? null) : null,
-            'pending_shop_description' => $isShopOwnerRegistration ? ($validated['shop_description'] ?? null) : null,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'contact_number' => $data['contact_number'] ?? null,
+            'password' => Hash::make($data['password']),
+
+            // Only for shop owners
+            'owner_registration_status' => $isOwner ? 'pending' : null,
+            'pending_shop_name' => $isOwner ? $data['shop_name'] ?? null : null,
+            'pending_shop_address' => $isOwner ? $data['shop_address'] ?? null : null,
+            'pending_shop_contact_number' => $isOwner ? $data['shop_contact_number'] ?? null : null,
+            'pending_shop_description' => $isOwner ? $data['shop_description'] ?? null : null,
         ]);
 
         event(new Registered($user));
 
-        if ($isShopOwnerRegistration) {
-            return redirect()
-                ->route('admin.login')
-                ->with('success', 'Shop owner registration submitted. Wait for platform admin approval before logging in.');
-        }
-
         return redirect()
-            ->route('customer.login')
-            ->with('status', 'Registration success, log-in using your log-in credentials.');
+            ->route($isOwner ? 'admin.login' : 'customer.login')
+            ->with($isOwner ? 'success' : 'status', $isOwner
+                ? 'Shop owner registration submitted. Wait for platform admin approval before logging in.'
+                : 'Registration success, log-in using your log-in credentials.');
     }
 
-    private function renderRegisterView(
+    // Reusable register view
+    private function registerView(
         string $heading,
         string $description,
         string $formActionRoute,
         string $loginRoute,
         string $loginLabel,
-        string $alternateRegisterRoute,
-        string $alternateRegisterLabel,
-        bool $showShopFields,
+        bool $showShopFields
     ): View {
-        return view('auth.register', [
-            'heading' => $heading,
-            'description' => $description,
-            'formActionRoute' => $formActionRoute,
-            'loginRoute' => $loginRoute,
-            'loginLabel' => $loginLabel,
-            'alternateRegisterRoute' => $alternateRegisterRoute,
-            'alternateRegisterLabel' => $alternateRegisterLabel,
-            'showShopFields' => $showShopFields,
-        ]);
+        return view('auth.register', compact(
+            'heading',
+            'description',
+            'formActionRoute',
+            'loginRoute',
+            'loginLabel',
+            'showShopFields'
+        ));
     }
 }

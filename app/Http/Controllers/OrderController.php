@@ -1,5 +1,59 @@
 <?php
 
+/**
+ * Order Controller (Business Owner Side)
+ *
+ * Manages all order-related operations for shop owners, including:
+ * order listing, creation, and status/payment updates.
+ *
+ * Responsibilities:
+ *
+ * 1. Order Listing (index):
+ *    - Retrieves all shops owned by the authenticated user
+ *    - Applies multiple optional filters:
+ *        - Shop selection
+ *        - Order status
+ *        - Payment status
+ *        - Date range (from/to)
+ *    - Loads orders with related customer and service data
+ *    - Computes aggregated metrics:
+ *        - Total displayed orders
+ *        - Pending and completed counts
+ *        - Revenue breakdown (total, paid, unpaid)
+ *    - Filters out empty shops when filters are applied
+ *
+ * 2. Order Creation (store):
+ *    - Validates customer and order input data
+ *    - Ensures shop ownership before allowing order creation
+ *    - Validates shop-service relationship integrity
+ *    - Creates or reuses customer user accounts based on email
+ *    - Handles conditional fields based on service mode (walk-in or delivery)
+ *    - Initializes order with default status and payment state
+ *
+ * 3. Order Updates (update):
+ *    - Authorizes updates via policy (Gate)
+ *    - Validates allowed status transitions and payment updates
+ *    - Ensures request integrity by matching order ID
+ *    - Updates order status, payment status, and weight when applicable
+ *
+ * 4. Query Filtering (applyOrderFilters):
+ *    - Centralized filtering logic for:
+ *        - Order status
+ *        - Payment status
+ *        - Date range constraints
+ *
+ * Security & Integrity:
+ * - Enforces ownership-based access control for shop and order operations
+ * - Uses Laravel Gate policies for authorization
+ * - Prevents cross-shop service assignment validation bypass
+ * - Ensures strict validation of all incoming request data
+ *
+ * Design Notes:
+ * - Combines business logic with filtering for a unified owner dashboard experience
+ * - Uses eager loading to optimize performance and reduce query overhead
+ * - Aggregates financial and operational metrics for reporting
+ */
+
 namespace App\Http\Controllers;
 
 use App\Models\Order;

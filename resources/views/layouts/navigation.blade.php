@@ -43,10 +43,8 @@
 
             <div class="hidden sm:flex sm:items-center sm:ms-6 sm:gap-4">
                 @guest
-                    <!-- Guests get direct entry points into each portal. -->
-                    <a href="{{ route('customer.login') }}" class="inline-flex items-center rounded-full border border-neutral-900/15 bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white">Customer Login</a>
-                    <a href="{{ route('admin.login') }}" class="inline-flex items-center rounded-full border border-neutral-900/15 bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white">Shop Owner Login</a>
-                    <a href="{{ route('platform-admin.login') }}" class="inline-flex items-center rounded-full border border-neutral-900/15 bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white">Admin Login</a>
+                    <!-- Guests get direct entry points into unified login. -->
+                    <a href="{{ route('unified.login') }}" class="inline-flex items-center rounded-full border border-neutral-900/15 bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white">Login</a>
                 @endguest
 
                 @auth

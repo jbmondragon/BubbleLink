@@ -14,7 +14,7 @@
         </p>
 
         <div class="auth-link-row">
-            <a class="auth-link" href="{{ route($loginRoute ?? 'login') }}">Login</a>
+            <a class="auth-link" href="{{ route('unified.login') }}">Login</a>
         </div>
 
         @if ($showShopFields ?? false)

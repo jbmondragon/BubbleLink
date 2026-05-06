@@ -86,7 +86,7 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         return redirect()
-            ->route($isOwner ? 'admin.login' : 'customer.login')
+            ->route('unified.login')
             ->with($isOwner ? 'success' : 'status', $isOwner
                 ? 'Shop owner registration submitted. Wait for platform admin approval before logging in.'
                 : 'Registration success, log-in using your log-in credentials.');

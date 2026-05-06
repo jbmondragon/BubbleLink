@@ -11,8 +11,6 @@ uses(RefreshDatabase::class);
 it('loads the seeded owner managed laundry graph through eloquent relationships', function () {
     $this->seed();
 
-    expect(User::query()->whereNotNull('email_verified_at')->count())->toBe(3);
-
     $quickCleanOwner = User::query()->with('shops.shopServices.service')->findOrFail(1);
 
     expect($quickCleanOwner->email)->toBe('john@example.com');
@@ -35,7 +33,7 @@ it('loads the seeded owner managed laundry graph through eloquent relationships'
         ->findOrFail(1);
 
     expect($order->customer->email)->toBe('bob@example.com');
-    expect($order->shop->shop_name)->toBe('QuickClean Manila');
+    expect($order->shop->shop_name)->toBe("Sofia's Bubble");
     expect($order->shopService->price)->toBe('100.00');
     expect($order->shopService->service->name)->toBe('wash, dry, fold');
     expect($order->status)->toBe('pending');

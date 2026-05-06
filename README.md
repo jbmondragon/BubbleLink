@@ -82,7 +82,7 @@ The database seeder currently creates one compact demo graph:
 - shop owner registration captures first-shop details during registration
 - platform admin approval unlocks the owner workspace
 - approved owners go directly to the business dashboard
-- email verification and profile management remain active
+- profile management remains active
 
 ## Verification Commands
 

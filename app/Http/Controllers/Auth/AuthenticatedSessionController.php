@@ -9,157 +9,141 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
-/**
- * Handles the login flow for customer, shop-owner, and platform-admin
- * authentication portals.
- */
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
+    // ===== LOGIN VIEWS =====
+
     public function createCustomer(): View
     {
-        return $this->renderLoginView(
-            heading: 'Customer login',
-            description: 'Sign in to browse shops, place orders, and track your laundry.',
-            formActionRoute: 'customer.login.store',
-            alternateLoginRoute: 'admin.login',
-            alternateLoginLabel: 'Shop Owner login',
-            registerRoute: 'customer.register',
-            registerLabel: 'Create customer account'
+        return $this->loginView(
+            'Customer login',
+            'Sign in to browse shops, place orders, and track your laundry.',
+            'customer.login.store',
+            'admin.login',
+            'Shop Owner login',
+            'customer.register',
+            'Create customer account'
         );
     }
 
     public function createAdmin(): View
     {
-        return $this->renderLoginView(
-            heading: 'Shop Owner login',
-            description: 'Sign in to manage your shops, services, and orders.',
-            formActionRoute: 'admin.login.store',
-            alternateLoginRoute: 'customer.login',
-            alternateLoginLabel: 'Customer login',
-            registerRoute: 'admin.register',
-            registerLabel: 'Create shop owner account'
+        return $this->loginView(
+            'Shop Owner login',
+            'Sign in to manage your shops, services, and orders.',
+            'admin.login.store',
+            'customer.login',
+            'Customer login',
+            'admin.register',
+            'Create shop owner account'
         );
     }
 
     public function createPlatformAdmin(): View
     {
-        return $this->renderLoginView(
-            heading: 'Platform Admin login',
-            description: 'Sign in to review and approve shop owner registration requests.',
-            formActionRoute: 'platform-admin.login.store',
-            alternateLoginRoute: 'admin.login',
-            alternateLoginLabel: 'Shop Owner login',
-            registerRoute: 'customer.login',
-            registerLabel: 'Customer login'
+        return $this->loginView(
+            'Platform Admin login',
+            'Sign in to review and approve shop owner registration requests.',
+            'platform-admin.login.store',
+            'admin.login',
+            'Shop Owner login',
+            'customer.login',
+            'Customer login'
         );
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
+    // ===== LOGIN LOGIC =====
+
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
-        if ($request->routeIs('platform-admin.login.store')) {
-            if (! $request->user()->is_platform_admin) {
-                return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
-            }
+        $user = $request->user();
 
-            return redirect()->intended(route('platform-admin.owner-registrations.index', absolute: false));
+        // Platform Admin Login
+        if ($request->routeIs('platform-admin.login.store')) {
+            return $user->is_platform_admin
+                ? redirect()->intended(route('platform-admin.owner-registrations.index', absolute: false))
+                : $this->reject($request, 'Please check again your login credentials.');
         }
 
+        // Shop Owner Login
         if ($request->routeIs('admin.login.store')) {
-            if ($request->user()->is_platform_admin) {
-                return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
+            if ($user->is_platform_admin) {
+                return $this->reject($request, 'Please check again your login credentials.');
             }
 
-            if ($request->user()->shops()->exists()) {
+            if ($user->shops()->exists()) {
                 return redirect()->intended(route('dashboard', absolute: false));
             }
 
-            if ($request->user()->isApprovedShopOwnerRegistration()) {
+            if ($user->isApprovedShopOwnerRegistration()) {
                 return redirect()
                     ->route('dashboard')
                     ->with('success', 'Shop owner account approved. Finish your first shop profile to get started.');
             }
 
-            if ($request->user()->isPendingShopOwnerApproval()) {
-                return $this->rejectAuthenticatedLogin($request, 'Your shop owner registration is still pending approval.');
+            if ($user->isPendingShopOwnerApproval()) {
+                return $this->reject($request, 'Your shop owner registration is still pending approval.');
             }
 
-            if ($request->user()->isRejectedShopOwnerRegistration()) {
-                return $this->rejectAuthenticatedLogin($request, 'Your shop owner registration was rejected. Please contact the platform admin.');
+            if ($user->isRejectedShopOwnerRegistration()) {
+                return $this->reject($request, 'Your shop owner registration was rejected. Please contact the platform admin.');
             }
 
-            return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
+            return $this->reject($request, 'Please check again your login credentials.');
         }
 
-        if ($request->user()->is_platform_admin) {
-            return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
-            /**
-             * Build the shared login view payload for the portal-specific login
-             * screens.
-             */
+        // Customer Login
+        if ($user->is_platform_admin || $user->shops()->exists() || $user->owner_registration_status) {
+            return $this->reject($request, 'Please check again your login credentials.');
         }
 
-        if ($request->user()->shops()->exists() || $request->user()->owner_registration_status !== null) {
-            return $this->rejectAuthenticatedLogin($request, 'Please check again your login credentials.');
-        }
-
-        $redirectRoute = route('customer.shops.index', absolute: false);
-
-        return redirect()->intended($redirectRoute);
+        return redirect()->intended(route('customer.shops.index', absolute: false));
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
+    // ===== LOGOUT =====
+
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
     }
 
-    private function rejectAuthenticatedLogin(LoginRequest $request, string $message): RedirectResponse
+    // ===== HELPERS =====
+
+    private function reject(LoginRequest $request, string $message): RedirectResponse
     {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return back()
-            ->withErrors(['email' => $message])
-            ->onlyInput('email');
+        return back()->withErrors(['email' => $message])->onlyInput('email');
     }
 
-    private function renderLoginView(
+    private function loginView(
         string $heading,
         string $description,
         string $formActionRoute,
         string $alternateLoginRoute,
         string $alternateLoginLabel,
         string $registerRoute,
-        string $registerLabel,
+        string $registerLabel
     ): View {
-        return view('auth.login', [
-            'heading' => $heading,
-            'description' => $description,
-            'formActionRoute' => $formActionRoute,
-            'alternateLoginRoute' => $alternateLoginRoute,
-            'alternateLoginLabel' => $alternateLoginLabel,
-            'registerRoute' => $registerRoute,
-            'registerLabel' => $registerLabel,
-        ]);
+        return view('auth.login', compact(
+            'heading',
+            'description',
+            'formActionRoute',
+            'alternateLoginRoute',
+            'alternateLoginLabel',
+            'registerRoute',
+            'registerLabel'
+        ));
     }
 }

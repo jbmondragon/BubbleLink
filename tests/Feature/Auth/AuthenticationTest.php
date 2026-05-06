@@ -9,6 +9,20 @@ test('login screens can be rendered', function () {
     $this->get('/platform-admin/login')->assertOk()->assertSee('Platform Admin login');
 });
 
+test('login screens post to their own portal routes', function () {
+    $this->get('/login')
+        ->assertOk()
+        ->assertSee('action="'.route('customer.login.store').'"', false);
+
+    $this->get('/shop-owner/login')
+        ->assertOk()
+        ->assertSee('action="'.route('admin.login.store').'"', false);
+
+    $this->get('/platform-admin/login')
+        ->assertOk()
+        ->assertSee('action="'.route('platform-admin.login.store').'"', false);
+});
+
 test('demo credentials can prefill the customer login screen', function () {
     $this->get('/customer/login?demo_email=bob@example.com&demo_password=password')
         ->assertOk()

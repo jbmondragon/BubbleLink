@@ -4,7 +4,7 @@
  * Authentication & Authorization Routes
  *
  * This file defines all authentication-related routes for the application,
- * including registration, login, email verification, and logout.
+ * including registration, login, and logout.
  *
  * The routes are grouped by middleware:
  *
@@ -14,7 +14,6 @@
  *   - Login for different user roles
  * - "auth" middleware:
  *   Handles authenticated user actions such as:
- *   - Email verification flow
  *   - Password confirmation and update
  *   - Logout functionality
  *
@@ -23,19 +22,13 @@
  *
  * Note:
  * - Ensure route names remain consistent when used in frontend or API integrations.
- * - Throttle middleware is applied to sensitive endpoints such as verification for security.
- * - Signed routes are used for email verification integrity.
- *
  * This structure is designed for scalability and separation of concerns in production environments.
  */
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 // Registration and login routes for guests (unauthenticated users)
@@ -57,17 +50,6 @@ Route::middleware('guest')->group(function () use ($registerGuestAuthRoute) {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('verify-email', EmailVerificationPromptController::class)
-        ->name('verification.notice');
-
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify');
-
-    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-        ->middleware('throttle:6,1')
-        ->name('verification.send');
-
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
         ->name('password.confirm');
 

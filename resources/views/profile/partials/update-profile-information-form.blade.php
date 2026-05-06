@@ -10,11 +10,6 @@
         </p>
     </header>
 
-    <!-- Secondary form exists only to trigger a fresh verification email when needed. -->
-    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
-        @csrf
-    </form>
-
     <!-- Primary account form persists name and email changes for the signed-in user. -->
     <form method="post" action="{{ route('profile.update') }}" class="profile-form">
         @csrf
@@ -30,24 +25,6 @@
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
-
-            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                <div>
-                    <p class="profile-status-copy">
-                        {{ __('Your email address is unverified.') }}
-
-                        <button form="send-verification" class="profile-link-button">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
-                    </p>
-
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="profile-status-copy profile-status-copy--success">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
-                    @endif
-                </div>
-            @endif
         </div>
 
         <div class="profile-form-actions">

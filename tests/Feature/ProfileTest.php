@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Carbon;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -14,6 +15,7 @@ test('profile page is displayed', function () {
 
 test('profile information can be updated', function () {
     $user = User::factory()->create();
+    $originalVerifiedAt = $user->email_verified_at;
 
     $response = $this
         ->actingAs($user)
@@ -30,11 +32,15 @@ test('profile information can be updated', function () {
 
     $this->assertSame('Test User', $user->name);
     $this->assertSame('test@example.com', $user->email);
-    $this->assertNull($user->email_verified_at);
+    $this->assertSame(
+        $originalVerifiedAt?->toDateTimeString(),
+        Carbon::parse($user->email_verified_at)->toDateTimeString()
+    );
 });
 
-test('email verification status is unchanged when the email address is unchanged', function () {
+test('email_verified_at timestamp is unchanged when the email address is unchanged', function () {
     $user = User::factory()->create();
+    $originalVerifiedAt = $user->email_verified_at;
 
     $response = $this
         ->actingAs($user)
@@ -47,7 +53,10 @@ test('email verification status is unchanged when the email address is unchanged
         ->assertSessionHasNoErrors()
         ->assertRedirect('/profile');
 
-    $this->assertNotNull($user->refresh()->email_verified_at);
+    $this->assertSame(
+        $originalVerifiedAt?->toDateTimeString(),
+        Carbon::parse($user->refresh()->email_verified_at)->toDateTimeString()
+    );
 });
 
 test('user can delete their account', function () {

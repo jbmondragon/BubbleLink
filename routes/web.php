@@ -1,65 +1,89 @@
 <?php
 
-/**
- * Application web routes for the customer catalog, customer orders, owner
- * workspace, platform-admin approvals, dashboard, and shared profile pages.
- */
-
-use App\Http\Controllers\CustomerOrderController;
-use App\Http\Controllers\CustomerShopController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\PlatformAdminOwnerApprovalController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\ShopController;
-use App\Http\Controllers\ShopServiceController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{
+    CustomerShopController,
+    CustomerOrderController,
+    DashboardController,
+    OrderController,
+    PlatformAdminOwnerApprovalController,
+    ProfileController,
+    ServiceController,
+    ShopController,
+    ShopServiceController
+};
 
+// ===== PUBLIC ROUTES =====
 Route::get('/', [CustomerShopController::class, 'index'])->name('customer.shops.home');
-Route::get('/shops', [CustomerShopController::class, 'index'])->name('customer.shops.index');
-Route::get('/shops/{shop}/details', [CustomerShopController::class, 'show'])->name('customer.shops.show');
 
+Route::prefix('shops')->name('customer.shops.')->group(function () {
+    Route::get('/', [CustomerShopController::class, 'index'])->name('index');
+    Route::get('{shop}/details', [CustomerShopController::class, 'show'])->name('show');
+});
+
+// ===== DASHBOARD =====
 Route::get('/dashboard', DashboardController::class)
-    ->middleware(['auth', 'verified', 'area:dashboard'])
+    ->middleware(['auth', 'area:dashboard'])
     ->name('dashboard');
 
+// ===== AUTHENTICATED ROUTES =====
 Route::middleware('auth')->group(function () {
-    Route::middleware('area:platform-admin')->group(function () {
-        Route::get('/platform-admin/owner-registrations', [PlatformAdminOwnerApprovalController::class, 'index'])->name('platform-admin.owner-registrations.index');
-        Route::patch('/platform-admin/owner-registrations/{user}/approve', [PlatformAdminOwnerApprovalController::class, 'approve'])->name('platform-admin.owner-registrations.approve');
-        Route::patch('/platform-admin/owner-registrations/{user}/reject', [PlatformAdminOwnerApprovalController::class, 'reject'])->name('platform-admin.owner-registrations.reject');
+
+    // ---- PLATFORM ADMIN ----
+    Route::prefix('platform-admin')->middleware('area:platform-admin')->group(function () {
+        Route::get('owner-registrations', [PlatformAdminOwnerApprovalController::class, 'index'])
+            ->name('platform-admin.owner-registrations.index');
+
+        Route::patch('owner-registrations/{user}/approve', [PlatformAdminOwnerApprovalController::class, 'approve'])
+            ->name('platform-admin.owner-registrations.approve');
+
+        Route::patch('owner-registrations/{user}/reject', [PlatformAdminOwnerApprovalController::class, 'reject'])
+            ->name('platform-admin.owner-registrations.reject');
     });
 
+    // ---- CUSTOMER ----
     Route::middleware('area:customer')->group(function () {
-        Route::get('/shops/{shop}/order', [CustomerOrderController::class, 'create'])->name('customer.orders.create');
-        Route::post('/shops/{shop}/order', [CustomerOrderController::class, 'store'])->name('customer.orders.store');
-        Route::get('/my-orders', [CustomerOrderController::class, 'index'])->name('customer.orders.index');
-        Route::get('/my-orders/{order}', [CustomerOrderController::class, 'show'])->name('customer.orders.show');
-        Route::patch('/my-orders/{order}/rating', [CustomerOrderController::class, 'rate'])->name('customer.orders.rate');
+        Route::prefix('shops/{shop}')->group(function () {
+            Route::get('order', [CustomerOrderController::class, 'create'])->name('customer.orders.create');
+            Route::post('order', [CustomerOrderController::class, 'store'])->name('customer.orders.store');
+        });
+
+        Route::prefix('my-orders')->name('customer.orders.')->group(function () {
+            Route::get('/', [CustomerOrderController::class, 'index'])->name('index');
+            Route::get('{order}', [CustomerOrderController::class, 'show'])->name('show');
+            Route::patch('{order}/rating', [CustomerOrderController::class, 'rate'])->name('rate');
+        });
     });
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // ---- PROFILE (SHARED) ----
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+    });
 
+    // ---- SHOP OWNER / BUSINESS ----
     Route::middleware('area:business')->group(function () {
-        Route::get('/shops/create', [ShopController::class, 'create'])->name('shops.create');
-        Route::post('/shops', [ShopController::class, 'store'])->name('shops.store');
-        Route::get('/shops/{shop}', [ShopController::class, 'show'])->name('shops.show');
-        Route::get('/shops/{shop}/edit', [ShopController::class, 'edit'])->name('shops.edit');
-        Route::patch('/shops/{shop}', [ShopController::class, 'update'])->name('shops.update');
-        Route::delete('/shops/{shop}', [ShopController::class, 'destroy'])->name('shops.destroy');
 
-        Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
+        // Shops
+        Route::resource('shops', ShopController::class)->only(['create', 'store', 'show']);
 
-        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-        Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-        Route::patch('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+        // Services
+        Route::get('services', [ServiceController::class, 'index'])->name('services.index');
 
-        Route::post('/shop-services', [ShopServiceController::class, 'store'])->name('shop-services.store');
-        Route::delete('/shop-services/{shopService}', [ShopServiceController::class, 'destroy'])->name('shop-services.destroy');
+        // Orders
+        Route::prefix('orders')->name('orders.')->group(function () {
+            Route::get('/', [OrderController::class, 'index'])->name('index');
+            Route::post('/', [OrderController::class, 'store'])->name('store');
+            Route::patch('{order}', [OrderController::class, 'update'])->name('update');
+        });
+
+        // Shop Services
+        Route::prefix('shop-services')->name('shop-services.')->group(function () {
+            Route::post('/', [ShopServiceController::class, 'store'])->name('store');
+            Route::delete('{shopService}', [ShopServiceController::class, 'destroy'])->name('destroy');
+        });
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

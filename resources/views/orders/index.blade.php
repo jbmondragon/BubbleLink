@@ -1,4 +1,9 @@
 <x-app-layout>
+    {{--
+        SID8 Frontend: Shop owner order management page.
+        This page lets owners filter orders, create internal orders, and update order and payment progress.
+    --}}
+
     <div class="owner-page">
         <div class="owner-page-container">
         <!-- Orders header introduces the main operational queue for business users. -->

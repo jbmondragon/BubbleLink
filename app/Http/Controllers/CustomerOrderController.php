@@ -16,6 +16,13 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
+/**
+ * Implements SID4 and SID5 for customer ordering.
+ *
+ * Responsibilities:
+ * - SID4: Place orders with different service options such as pickup, delivery, both, or walk-in
+ * - SID5: View order history, inspect order details, and submit a shop rating on completed work
+ */
 class CustomerOrderController extends Controller
 {
     public function create(Request $request, Shop $shop): View

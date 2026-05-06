@@ -1,4 +1,9 @@
 <x-app-layout>
+    {{--
+        SID2 Frontend: Customer shop marketplace.
+        This page lets customers browse and search available laundry shops before choosing one.
+    --}}
+
     <x-slot name="header">
         <!-- Marketplace header introduces the public catalog experience. -->
         <div>

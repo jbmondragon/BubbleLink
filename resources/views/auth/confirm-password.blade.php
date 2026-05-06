@@ -1,9 +1,15 @@
 <x-guest-layout>
+
 <!--**************************************************************************************************-->
-    {{-- Password confirmation screen that asks the user to 
-          re-enter their password before accessing a secure area --}}
+    {{--
+        Password Confirmation View
+
+        This screen is shown when a user tries to access a protected/secure area.
+        It requires the user to re-enter their password to verify their identity
+        before continuing.
+    --}}
 <!--**************************************************************************************************-->
-    
+
     <div class="auth-note">
         {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
     </div>

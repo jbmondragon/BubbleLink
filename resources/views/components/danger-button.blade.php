@@ -1,4 +1,15 @@
-{{-- Submit button; merges attributes and applies default red styling --}}
+{{--
+    Primary Button Component
+
+    Purpose:
+    - Renders a reusable primary action button (commonly used for form submission).
+
+    Behavior:
+    - Defaults to type="submit" for form usage.
+    - Merges additional attributes via $attributes (e.g., class, id, disabled).
+    - Allows full customization while preserving base styling.
+
+--}}
 
 <button {{ $attributes->merge([
     'type' => 'submit',

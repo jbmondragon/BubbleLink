@@ -1,4 +1,11 @@
 <x-app-layout>
+
+{{--
+    SID4 Frontend: Customer order creation page.
+    This page lets the customer choose a service option and submit a laundry order with pickup, delivery, both, or walk-in flow.
+--}}
+
+
     <x-slot name="header">
         <!-- Order header anchors the booking flow to the currently selected shop. -->
         <div class="customer-page-header customer-page-header--split">

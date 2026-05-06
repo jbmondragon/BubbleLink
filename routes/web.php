@@ -13,7 +13,14 @@ use App\Http\Controllers\{
     ShopServiceController
 };
 
-// ===== PUBLIC ROUTES =====
+/*
+|--------------------------------------------------------------------------
+| I. PUBLIC ENDPOINTS
+|--------------------------------------------------------------------------
+| GET /                  -> CustomerShopController@index
+| GET /shops             -> CustomerShopController@index
+| GET /shops/{shop}/details -> CustomerShopController@show
+*/
 Route::get('/', [CustomerShopController::class, 'index'])->name('customer.shops.home');
 
 Route::prefix('shops')->name('customer.shops.')->group(function () {
@@ -21,15 +28,30 @@ Route::prefix('shops')->name('customer.shops.')->group(function () {
     Route::get('{shop}/details', [CustomerShopController::class, 'show'])->name('show');
 });
 
-// ===== DASHBOARD =====
+/*
+|--------------------------------------------------------------------------
+| II.DASHBOARD ENDPOINT
+|--------------------------------------------------------------------------
+| GET /dashboard -> DashboardController
+| Middleware: auth, area:dashboard
+*/
 Route::get('/dashboard', DashboardController::class)
     ->middleware(['auth', 'area:dashboard'])
     ->name('dashboard');
 
-// ===== AUTHENTICATED ROUTES =====
+/*
+* Grouped by business area so each section matches the API design document.
+*/
 Route::middleware('auth')->group(function () {
 
-    // ---- PLATFORM ADMIN ----
+    /*
+    |--------------------------------------------------------------------------
+    | III. PLATFORM ADMIN ENDPOINTS
+    |--------------------------------------------------------------------------
+    | GET   /platform-admin/owner-registrations
+    | PATCH /platform-admin/owner-registrations/{user}/approve
+    | PATCH /platform-admin/owner-registrations/{user}/reject
+    */
     Route::prefix('platform-admin')->middleware('area:platform-admin')->group(function () {
         Route::get('owner-registrations', [PlatformAdminOwnerApprovalController::class, 'index'])
             ->name('platform-admin.owner-registrations.index');
@@ -41,7 +63,16 @@ Route::middleware('auth')->group(function () {
             ->name('platform-admin.owner-registrations.reject');
     });
 
-    // ---- CUSTOMER ----
+    /*
+    |--------------------------------------------------------------------------
+    | IV. CUSTOMER ORDER ENDPOINTS
+    |--------------------------------------------------------------------------
+    | GET   /shops/{shop}/order
+    | POST  /shops/{shop}/order
+    | GET   /my-orders
+    | GET   /my-orders/{order}
+    | PATCH /my-orders/{order}/rating
+    */
     Route::middleware('area:customer')->group(function () {
         Route::prefix('shops/{shop}')->group(function () {
             Route::get('order', [CustomerOrderController::class, 'create'])->name('customer.orders.create');
@@ -55,30 +86,50 @@ Route::middleware('auth')->group(function () {
         });
     });
 
-    // ---- PROFILE (SHARED) ----
+    /*
+    |--------------------------------------------------------------------------
+    | V. PROFILE ENDPOINTS
+    |--------------------------------------------------------------------------
+    | GET    /profile
+    | PATCH  /profile
+    | DELETE /profile
+    */
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
     });
 
-    // ---- SHOP OWNER / BUSINESS ----
+    /*
+    |--------------------------------------------------------------------------
+    | VI. SHOP OWNER ENDPOINTS
+    |--------------------------------------------------------------------------
+    | GET    /shops/create
+    | POST   /shops
+    | GET    /shops/{shop}
+    | GET    /services
+    | GET    /orders
+    | POST   /orders
+    | PATCH  /orders/{order}
+    | POST   /shop-services
+    | DELETE /shop-services/{shopService}
+    */
     Route::middleware('area:business')->group(function () {
 
-        // Shops
+        // Shop profile workspace
         Route::resource('shops', ShopController::class)->only(['create', 'store', 'show']);
 
-        // Services
+        // Service management
         Route::get('services', [ServiceController::class, 'index'])->name('services.index');
 
-        // Orders
+        // Owner order management
         Route::prefix('orders')->name('orders.')->group(function () {
             Route::get('/', [OrderController::class, 'index'])->name('index');
             Route::post('/', [OrderController::class, 'store'])->name('store');
             Route::patch('{order}', [OrderController::class, 'update'])->name('update');
         });
 
-        // Shop Services
+        // Shop-service assignments and pricing
         Route::prefix('shop-services')->name('shop-services.')->group(function () {
             Route::post('/', [ShopServiceController::class, 'store'])->name('store');
             Route::delete('{shopService}', [ShopServiceController::class, 'destroy'])->name('destroy');

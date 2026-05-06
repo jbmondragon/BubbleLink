@@ -4,6 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+/**
+ * UserController
+ *
+ * Handles CRUD operations for users:
+ * - Lists all users
+ * - Displays forms for creating and editing users
+ * - Stores new users with validation and password hashing
+ * - Updates existing user details
+ * - Deletes users from the system
+ */
+
 class UserController extends Controller
 {
     /**

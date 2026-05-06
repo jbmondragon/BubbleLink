@@ -1,4 +1,9 @@
 <x-app-layout>
+    {{--
+        SID6 Frontend: First shop creation page for an approved owner.
+        This page completes the owner onboarding flow by creating the shop record used in later management screens.
+    --}}
+
     <div class="owner-page">
         <div class="owner-page-container owner-page-container--narrow">
         <!-- Simple shop creation screen used when the owner still has no shop record. -->

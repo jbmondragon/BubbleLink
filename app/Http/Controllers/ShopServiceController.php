@@ -10,6 +10,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
+
+/**
+ * ShopServiceController
+ *
+ * Manages the assignment of services to shops:
+ * - Adds (assigns) a service to a specific shop with pricing
+ * - Ensures services are unique per shop
+ * - Validates that services belong to the correct shop
+ * - Removes assigned services from a shop
+ *
+ * Implements SID7 for shop owners managing services and pricing.
+ */
+
 class ShopServiceController extends Controller
 {
     public function store(Request $request): RedirectResponse

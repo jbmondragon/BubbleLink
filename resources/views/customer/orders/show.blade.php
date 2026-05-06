@@ -1,4 +1,9 @@
 <x-app-layout>
+{{--
+    SID5 Frontend: Customer order detail page.
+    This page shows the full details of one order so the customer can inspect status, price, and fulfillment progress.
+--}}
+
     <x-slot name="header">
         <!-- Order detail header keeps primary actions close to the current order context. -->
         <div class="customer-page-header customer-page-header--split">

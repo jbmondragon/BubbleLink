@@ -11,17 +11,15 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
+/**
+ * Implements SID1 and part of SID6 through registration flows.
+ *
+ * Responsibilities:
+ * - SID1: Register customer accounts for secure access to laundry services
+ * - SID6: Register shop owners with pending approval data for later admin review
+ */
 class RegisteredUserController extends Controller
 {
-    /*******************************************************************************************************************
-     *  USER STORY 1: USER REGISTRATION
-     *
-     *  Handles user registration for both customers and shop owners.
-     *  Allows customers to create accounts and securely authenticate into the platform to access services and manage orders.
-     *  Allows shop owners to register their shops and wait for admin approval before accessing the platform.
-     *
-     * *******************************************************************************************************************/
-
     // Show customer registration form
     public function createCustomer(): View
     {

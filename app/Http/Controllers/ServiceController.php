@@ -8,6 +8,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+/**
+ * Implements SID7 for shop owners managing services and pricing.
+ *
+ * Responsibilities:
+ * - Load the owner service management workspace for approved shops
+ * - Ensure default services exist for each owner shop
+ * - Provide service and shop data used to assign offerings and pricing
+ */
 class ServiceController extends Controller
 {
     public function index(Request $request): View|RedirectResponse

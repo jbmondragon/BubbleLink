@@ -1,4 +1,9 @@
 <x-app-layout>
+    {{--
+        SID3 Frontend: Customer shop detail page.
+        This page shows one shop's details, services, and pricing so the customer can decide whether to order.
+    --}}
+
     <x-slot name="header">
         <!-- Shop detail header identifies the shop the customer is currently reviewing. -->
         <div class="customer-page-header customer-page-header--split">

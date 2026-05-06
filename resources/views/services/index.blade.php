@@ -1,4 +1,9 @@
 <x-app-layout>
+    {{--
+        SID7 Frontend: Shop owner service and pricing management page.
+        This page lets owners assign services to shops and control customer-facing pricing.
+    --}}
+
     <div class="owner-page">
         <div class="owner-page-container">
         <!-- Services header introduces the pricing workspace for the signed-in owner. -->

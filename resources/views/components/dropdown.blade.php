@@ -1,6 +1,19 @@
 @props(['align' => 'right', 'width' => 'w-48', 'contentClasses' => 'py-1 bg-white'])
 
-{{-- Dropdown menu with toggle, positioning, and basic styling --}}
+{{--
+    Dropdown Component
+
+    Purpose:
+    - Provides a reusable dropdown menu UI element with toggleable visibility.
+    - Used for navigation menus, user actions, and grouped links.
+
+    Behavior:
+    - Uses Alpine.js to manage open/close state via `open`.
+    - Toggles dropdown visibility when the trigger is clicked.
+    - Closes automatically when clicking outside the component.
+    - Closes when clicking inside the dropdown content.
+--}}
+
 <div class="relative" x-data="{ open: false }" @click.outside="open = false">
     
     <div @click="open = !open">

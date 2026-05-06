@@ -1,4 +1,9 @@
 <x-app-layout>
+    {{--
+        SID6 Frontend: Platform-admin approval queue.
+        This page lets admins review, approve, and reject shop owner registration requests.
+    --}}
+
     <div class="admin-page">
         <div class="admin-page-container">
             <!-- Admin hero explains that this screen gates owner access to the business workspace. -->

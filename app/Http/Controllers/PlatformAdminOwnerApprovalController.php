@@ -12,6 +12,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+/**
+ * Implements SID6 for platform-admin approval of shop owner registrations.
+ *
+ * Responsibilities:
+ * - Review pending shop owner registrations
+ * - Approve or reject submitted registrations
+ * - Create the first shop record for approved owners when pending shop data exists
+ */
 class PlatformAdminOwnerApprovalController extends Controller
 {
     public function index(Request $request): View

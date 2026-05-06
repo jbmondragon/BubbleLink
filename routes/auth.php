@@ -1,28 +1,17 @@
 <?php
 
 /**
- * Authentication & Authorization Routes
+ * Authentication Routes
  *
- * This file defines all authentication-related routes for the application,
- * including registration, login, and logout.
+ * Defines all authentication-related endpoints for:
+ * - Customers
+ * - Shop Owners (Admins)
+ * - Platform Admins
  *
- * The routes are grouped by middleware:
- *
- * - "guest" middleware:
- *   Handles unauthenticated user actions such as:
- *   - Customer/Admin/Platform Admin registration
- *   - Login for different user roles
- * - "auth" middleware:
- *   Handles authenticated user actions such as:
- *   - Password confirmation and update
- *   - Logout functionality
- *
- * Multi-role support is implemented (Customer, Shop Owner/Admin, Platform Admin),
- * each with dedicated login and registration endpoints to support role-based access control.
- *
- * Note:
- * - Ensure route names remain consistent when used in frontend or API integrations.
- * This structure is designed for scalability and separation of concerns in production environments.
+ * Features:
+ * - Reusable helper for GET/POST auth route pairs
+ * - Role-based entry points (customer, admin, platform admin)
+ * - Middleware separation (guest vs authenticated users)
  */
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -31,13 +20,34 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
-// Registration and login routes for guests (unauthenticated users)
+/*
+|--------------------------------------------------------------------------
+| VII. AUTHENTICATION ENDPOINTS
+|--------------------------------------------------------------------------
+| GET  /register               -> RegisteredUserController@createCustomer
+| POST /register               -> RegisteredUserController@store
+| GET  /customer/register      -> RegisteredUserController@createCustomer
+| POST /customer/register      -> RegisteredUserController@store
+| GET  /shop-owner/register    -> RegisteredUserController@createAdmin
+| POST /shop-owner/register    -> RegisteredUserController@store
+| GET  /login                  -> AuthenticatedSessionController@createCustomer
+| POST /login                  -> AuthenticatedSessionController@store
+| GET  /customer/login         -> AuthenticatedSessionController@createCustomer
+| POST /customer/login         -> AuthenticatedSessionController@store
+| GET  /shop-owner/login       -> AuthenticatedSessionController@createAdmin
+| POST /shop-owner/login       -> AuthenticatedSessionController@store
+| GET  /platform-admin/login   -> AuthenticatedSessionController@createPlatformAdmin
+| POST /platform-admin/login   -> AuthenticatedSessionController@store
+*/
+
+// Guest-only registration and login route pair helper.
 $registerGuestAuthRoute = function (string $uri, array|string|callable|null $getAction, string $name): void {
     Route::get($uri, $getAction)->name($name);
     Route::post($uri, [str_contains($name, 'register') ? RegisteredUserController::class : AuthenticatedSessionController::class, 'store'])
         ->name("{$name}.store");
 };
 
+// Public authentication entry points.
 Route::middleware('guest')->group(function () use ($registerGuestAuthRoute) {
     $registerGuestAuthRoute('register', [RegisteredUserController::class, 'createCustomer'], 'register');
     $registerGuestAuthRoute('customer/register', [RegisteredUserController::class, 'createCustomer'], 'customer.register');
@@ -49,6 +59,15 @@ Route::middleware('guest')->group(function () use ($registerGuestAuthRoute) {
     $registerGuestAuthRoute('platform-admin/login', [AuthenticatedSessionController::class, 'createPlatformAdmin'], 'platform-admin.login');
 });
 
+/*
+|--------------------------------------------------------------------------
+| VIII. PASSWORD & SESSION ENDPOINTS
+|--------------------------------------------------------------------------
+| GET  /confirm-password -> ConfirmablePasswordController@show
+| POST /confirm-password -> ConfirmablePasswordController@store
+| PUT  /password         -> PasswordController@update
+| POST /logout           -> AuthenticatedSessionController@destroy
+*/
 Route::middleware('auth')->group(function () {
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
         ->name('password.confirm');

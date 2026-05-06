@@ -8,6 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
+/**
+ * Supports SID6, SID7, and SID8 by establishing the shop workspace owners operate from.
+ *
+ * Responsibilities:
+ * - Let an approved shop owner create the first shop profile after approval
+ * - Show shop-level service and order summaries for owner operations
+ * - Prevent post-creation editing in the simplified owner flow
+ */
 class ShopController extends Controller
 {
     public function show(Request $request, Shop $shop): View

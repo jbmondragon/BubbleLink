@@ -9,6 +9,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
+/**
+ * Implements the login portion of SID1 and the access-gating flow for SID6.
+ *
+ * Responsibilities:
+ * - SID1: Authenticate customers and shop owners into the correct area
+ * - SID6: Block unapproved owner access until platform admin review is complete
+ * - Route platform admins to registration approval management
+ */
 class AuthenticatedSessionController extends Controller
 {
     // ===== LOGIN VIEWS =====

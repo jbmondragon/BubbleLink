@@ -1,8 +1,10 @@
 <x-guest-layout>
 
-<!-- ******************************************************************************************************** -->
-    {{-- Registration page for creating a user account and owner account --}}
-<!-- ******************************************************************************************************** -->
+    {{--
+        SID1 and SID6 Frontend: Registration page.
+        SID1 covers customer account creation.
+        SID6 covers shop owner registration with pending shop details for later admin approval.
+    --}}
 
     <div class="auth-intro">
         <p class="auth-eyebrow">BubbleLink Access</p>
@@ -46,9 +48,7 @@
             <x-input-label for="contact_number" :value="__('Contact')" />
             <x-text-input id="contact_number" class="block mt-1 w-full" name="contact_number" :value="old('contact_number')" />
         </div>
-<!-- ******************************************************************************************************** -->
-        {{-- Additional information needed for owner account --}}
-<!-- ******************************************************************************************************** -->
+    {{-- SID6 owner registration fields collect the first shop details for admin review. --}}
 
         @if ($showShopFields ?? false)
             <div class="auth-panel">

@@ -1,4 +1,9 @@
 <x-app-layout>
+    {{--
+        SID7 and SID8 Frontend: Shop workspace detail page.
+        This page summarizes assigned services, recent orders, and shop details for owner operations.
+    --}}
+
     <div class="owner-page">
         <div class="owner-page-container">
         <!-- Shop workspace header anchors the metrics and tables to one branch. -->

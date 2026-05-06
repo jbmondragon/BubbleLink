@@ -1,8 +1,7 @@
-
-<!-- This page allows customers to create a laundry order by selecting a service, 
- choosing a service mode (pickup, delivery, walk-in), and providing the necessary address 
- and scheduling details. The form dynamically updates available fields and estimated pricing 
- based on user selections, ensuring only relevant inputs are shown before submitting the order. -->
+{{--
+    SID5 Frontend: Customer order history page.
+    This page lists the customer's current and past orders so they can review and track them.
+--}}
 
  <x-app-layout>
     <x-slot name="header">

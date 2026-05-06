@@ -6,9 +6,16 @@ use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+/**
+ * Implements SID2 and SID3 for customer shop discovery.
+ *
+ * Responsibilities:
+ * - SID2: Browse and search available laundry shops
+ * - SID3: View shop details and offered services before ordering
+ */
 class CustomerShopController extends Controller
 {
-    // List all shops (with search): User Story 2 and 3
+
     public function index(Request $request): View
     {
         $search = trim($request->input('search', ''));

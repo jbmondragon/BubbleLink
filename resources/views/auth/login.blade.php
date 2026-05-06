@@ -1,6 +1,9 @@
 <x-guest-layout>
 
-    {{-- Login page that supports customer/owner access, shows links to alternate auth routes, and handles sign-in --}}
+    {{--
+        SID1 Frontend: Login page for customer, shop owner, and platform-admin access.
+        This view supports secure sign-in so users can enter the correct workspace.
+    --}}
 
     <div class="auth-intro">
         <p class="auth-eyebrow">BubbleLink Access</p>

@@ -1,5 +1,11 @@
 
 <x-app-layout>
+    {{--
+        SID6, SID7, and SID8 Frontend: Main dashboard.
+        SID6 routes platform admins to owner approvals.
+        SID7 and SID8 give shop owners service and order entry points plus summary metrics.
+    --}}
+
     <div class="owner-page">
         <div class="owner-page-container">
 

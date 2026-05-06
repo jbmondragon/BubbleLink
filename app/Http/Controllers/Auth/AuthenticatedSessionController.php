@@ -11,7 +11,6 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-
     // ===== UNIFIED LOGIN VIEW =====
 
     public function createUnified(): View
@@ -68,6 +67,56 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = $request->user();
+
+        // Unified Login Logic - automatically detect user role
+        if ($request->routeIs('unified.login.store')) {
+            // Platform Admin Login
+            if ($user->is_platform_admin) {
+                return redirect()->intended(route('platform-admin.owner-registrations.index', absolute: false));
+            }
+
+            // Shop Owner Login
+            if ($user->shops()->exists()) {
+                return redirect()->intended(route('dashboard', absolute: false));
+            }
+
+            if ($user->isApprovedShopOwnerRegistration()) {
+                return redirect()
+                    ->route('dashboard')
+                    ->with('success', 'Shop owner account approved. Finish your first shop profile to get started.');
+            }
+
+            if ($user->isPendingShopOwnerApproval()) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors(['email' => 'Your shop owner registration is still pending approval.'])->onlyInput('email');
+            }
+
+            if ($user->isRejectedShopOwnerRegistration()) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors(['email' => 'Your shop owner registration was rejected. Please contact the platform admin.'])->onlyInput('email');
+            }
+
+            if ($user->owner_registration_status) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors(['email' => 'Please check again your login credentials.'])->onlyInput('email');
+            }
+
+            // Customer Login (default)
+        if ($user->is_platform_admin || $user->shops()->exists() || $user->owner_registration_status) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return back()->withErrors(['email' => 'Please check again your login credentials.'])->onlyInput('email');
+        }
+
+        return redirect()->intended(route('customer.shops.index', absolute: false));
+        }
 
         // Platform Admin Login
         if ($request->routeIs('platform-admin.login.store')) {

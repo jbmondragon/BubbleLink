@@ -112,7 +112,7 @@ class OrderController extends Controller
             ],
             'service_mode' => 'required|in:walk_in,delivery_only',
             'delivery_address' => 'nullable|required_if:service_mode,delivery_only|string|max:255',
-            'weight' => 'nullable|numeric|min:0',
+            'number_of_loads' => 'nullable|integer|min:1',
             'delivery_datetime' => 'nullable|required_if:service_mode,delivery_only|date',
             'payment_method' => 'nullable|in:gcash,cash',
             'payment_status' => 'nullable|in:paid,unpaid',
@@ -147,10 +147,10 @@ class OrderController extends Controller
             'service_mode' => $validated['service_mode'],
             'pickup_address' => null,
             'delivery_address' => $requiresDelivery ? ($validated['delivery_address'] ?? null) : null,
-            'weight' => $validated['weight'] ?? null,
+            'number_of_loads' => $validated['number_of_loads'] ?? null,
             'pickup_datetime' => null,
             'delivery_datetime' => $requiresDelivery ? ($validated['delivery_datetime'] ?? null) : null,
-            'total_price' => $shopService->price,
+            'total_price' => $shopService->price * ($validated['number_of_loads'] ?? 1),
             'status' => 'pending',
             'payment_method' => $validated['payment_method'] ?? null,
             'payment_status' => $validated['payment_status'] ?? 'unpaid',
@@ -167,10 +167,14 @@ class OrderController extends Controller
             'order_id' => 'required|integer|in:'.$order->id,
             'status' => 'required|in:pending,accepted,awaiting_dropoff,rejected,in_progress,completed',
             'payment_status' => 'nullable|in:paid,unpaid',
-            'weight' => 'nullable|numeric|min:0',
+            'number_of_loads' => 'nullable|integer|min:1',
         ]);
 
         unset($validated['order_id']);
+
+        if (array_key_exists('number_of_loads', $validated) && $validated['number_of_loads'] !== null) {
+            $validated['total_price'] = $order->shopService->price * $validated['number_of_loads'];
+        }
 
         $order->update($validated);
 

@@ -36,7 +36,7 @@
                         <select id="shop_service_id" name="shop_service_id" class="customer-form-control" x-on:change="updateSelectedPrice($event)" required>
                             @foreach ($services as $shopService)
                                 <option value="{{ $shopService->id }}" data-price="{{ number_format((float) $shopService->price, 2, '.', '') }}" @selected(old('shop_service_id') == $shopService->id)>
-                                    {{ $shopService->service->name }} · PHP {{ number_format((float) $shopService->price, 2) }} · Max Weight: {{ number_format((float) $shopService->max_weight_kg, 2) }} kg
+                                    {{ $shopService->service->name }} · PHP {{ number_format((float) $shopService->price, 2) }} · Max {{ number_format((float) $shopService->max_weight_kg, 2) }} kg per Load
                                 </option>
                             @endforeach
                         </select>

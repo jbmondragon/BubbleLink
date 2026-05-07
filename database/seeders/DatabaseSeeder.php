@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
                 'service_mode' => 'both',
                 'pickup_address' => 'University of the Philippines Tacloban, Tacloban City',
                 'delivery_address' => 'University of the Philippines Tacloban, Tacloban City',
-                'weight' => 4.50,
+                'number_of_loads' => 1,
                 'pickup_datetime' => now()->subDay(),
                 'delivery_datetime' => now()->addDay(),
                 'total_price' => 100.00,

@@ -56,7 +56,7 @@
                                 <thead>
                                     <tr>
                                         <th>Service</th>
-                                        <th>Max Weight (kg)</th>
+                                        <th>Max Weight per Load (kg)</th>
                                         <th>Price</th>
                                     </tr>
                                 </thead>

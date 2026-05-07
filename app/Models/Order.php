@@ -19,7 +19,7 @@ class Order extends Model
         'service_mode',
         'pickup_address',
         'delivery_address',
-        'weight',
+        'number_of_loads',
         'pickup_datetime',
         'delivery_datetime',
         'total_price',
@@ -33,7 +33,7 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'weight' => 'decimal:2',
+            'number_of_loads' => 'integer',
             'total_price' => 'decimal:2',
             'pickup_datetime' => 'datetime',
             'delivery_datetime' => 'datetime',

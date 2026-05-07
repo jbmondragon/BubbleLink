@@ -86,6 +86,42 @@ it('lets an owner access and manage internal orders directly', function () {
         ->assertSeeText('Walk-in Customer');
 });
 
+it('recalculates order total price when the shop owner records number of loads', function () {
+    ['owner' => $owner, 'shop' => $shop, 'shopService' => $shopService] = createOwnerDashboardContext();
+
+    $customer = User::factory()->create();
+
+    $order = Order::create([
+        'customer_id' => $customer->id,
+        'shop_id' => $shop->id,
+        'shop_service_id' => $shopService->id,
+        'service_mode' => 'pickup_only',
+        'pickup_address' => '456 Pickup Street',
+        'delivery_address' => null,
+        'pickup_datetime' => now()->addDay(),
+        'delivery_datetime' => null,
+        'total_price' => $shopService->price,
+        'status' => 'pending',
+        'payment_method' => 'cash',
+        'payment_status' => 'unpaid',
+    ]);
+
+    $this->actingAs($owner)
+        ->patch(route('orders.update', $order), [
+            'order_id' => $order->id,
+            'status' => 'accepted',
+            'payment_status' => 'unpaid',
+            'number_of_loads' => 3,
+        ])
+        ->assertRedirect(route('orders.index'));
+
+    $this->assertDatabaseHas('orders', [
+        'id' => $order->id,
+        'number_of_loads' => 3,
+        'total_price' => $shopService->price * 3,
+    ]);
+});
+
 it('redirects approved owners without shops to create a shop before services or orders', function () {
     $owner = User::factory()->create([
         'owner_registration_status' => 'approved',

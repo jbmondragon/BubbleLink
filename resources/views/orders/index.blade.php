@@ -228,7 +228,7 @@
                                     <th>Customer</th>
                                     <th>Service</th>
                                     <th>Mode</th>
-                                    <th>Weight</th>
+                                    <th>Loads</th>
                                     <th>Amount</th>
                                     <th>Status</th>
                                     <th>Payment</th>
@@ -249,8 +249,8 @@
                                         <td>{{ str($order->service_mode ?? 'n/a')->replace('_', ' ')->title() }}</td>
                                         <td>
                                             <div class="flex flex-col gap-2">
-                                                <input name="weight" form="order-update-{{ $order->id }}" type="number" step="0.01" min="0" value="{{ $failedOrderId == $order->id ? old('weight', $order->weight) : $order->weight }}" class="owner-weight-field">
-                                                <x-input-error :messages="$orderErrors->get('weight')" class="mt-0" />
+                                                <input name="number_of_loads" form="order-update-{{ $order->id }}" type="number" step="1" min="1" value="{{ $failedOrderId == $order->id ? old('number_of_loads', $order->number_of_loads) : $order->number_of_loads }}" class="owner-weight-field">
+                                                <x-input-error :messages="$orderErrors->get('number_of_loads')" class="mt-0" />
                                             </div>
                                         </td>
                                         <td>₱{{ number_format((float) $order->total_price, 2) }}</td>

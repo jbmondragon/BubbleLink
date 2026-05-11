@@ -16,12 +16,12 @@ use Illuminate\View\View;
 class CustomerShopController extends Controller
 {
 
-    public function index(Request $request): View
+    public function index(Request $request): View // Allows users to find laundry services usign the search
     {
-        $search = trim($request->input('search', ''));
+        $search = trim($request->input('search', '')); //Gets search term from request, trims whitespace, defaults to empty string
 
-        $shops = Shop::with('shopServices.service')
-            ->when($search, function ($q) use ($search) {
+        $shops = Shop::with('shopServices.service') // Eager load shop services and their associated services
+            ->when($search, function ($q) use ($search) { //Only apply search filters if search term is not empty
                 $q->where('shop_name', 'like', "%$search%")
                   ->orWhere('address', 'like', "%$search%")
                   ->orWhere('description', 'like', "%$search%")
@@ -29,7 +29,7 @@ class CustomerShopController extends Controller
                       $q->where('name', 'like', "%$search%");
                   });
             })
-            ->orderBy('shop_name')
+            ->orderBy('shop_name') //orders indexes alphabetically
             ->get();
 
         $shopCards = $shops->map(function ($shop) {
@@ -50,7 +50,7 @@ class CustomerShopController extends Controller
     // Show single shop details
     public function show(Shop $shop): View
     {
-        $shop->load('shopServices.service');
+        $shop->load('shopServices.service'); //Loads shop services with service details
 
         $services = $shop->shopServices
             ->sortBy('service.name')

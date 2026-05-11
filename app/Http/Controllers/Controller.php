@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 abstract class Controller
 {
-    protected function ensureCustomer(Request $request): void
+    protected function ensureCustomer(Request $request): void // ensures current user is a customer, 403 if not
     {
         $user = $request->user();
 

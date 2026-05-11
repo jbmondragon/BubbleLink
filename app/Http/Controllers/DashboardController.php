@@ -18,16 +18,16 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request): View|RedirectResponse
     {
-        if ($request->user()->is_platform_admin) {
+        if ($request->user()->is_platform_admin) { //redirects platform admins to shop owner approval review
             return redirect()->route('platform-admin.owner-registrations.index');
         }
 
-        $shops = $this->ownerShops($request)->with([
+        $shops = $this->ownerShops($request)->with([ //loads orders and shop services for each shop
             'orders',
             'shopServices',
         ])->get();
 
-        return view('dashboard', [
+        return view('dashboard', [ //dashboard for shops
             'shops' => $shops,
             'shopCount' => $shops->count(),
             'totalOrders' => $shops->flatMap->orders->count(),

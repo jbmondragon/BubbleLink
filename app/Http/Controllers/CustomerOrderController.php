@@ -25,23 +25,23 @@ use Illuminate\View\View;
  */
 class CustomerOrderController extends Controller
 {
-    public function create(Request $request, Shop $shop): View
+    public function create(Request $request, Shop $shop): View //Creates the order form
     {
-        $this->ensureCustomer($request);
+        $this->ensureCustomer($request); //verifies current user is a customer, 403 if not
 
-        $shop->load(['shopServices.service']);
+        $shop->load(['shopServices.service']); //Loads all the data from shopServices.service
 
-        abort_if($shop->shopServices->isEmpty(), 404);
+        abort_if($shop->shopServices->isEmpty(), 404); //If no services are found, return 404
 
-        return view('customer.orders.create', [
+        return view('customer.orders.create', [ //passes to create.blade.php within views/customers/orders to create the order form
             'shop' => $shop,
             'services' => $shop->shopServices->sortBy(fn ($shopService) => $shopService->service->name)->values(),
         ]);
     }
 
-    public function store(Request $request, Shop $shop): RedirectResponse
+    public function store(Request $request, Shop $shop): RedirectResponse //Stores the order
     {
-        $this->ensureCustomer($request);
+        $this->ensureCustomer($request); //verifies current user is a customer, 403 if not
 
         $validated = $request->validateWithBag('customerOrderCreate', [
             'shop_service_id' => [
@@ -83,9 +83,9 @@ class CustomerOrderController extends Controller
             ->with('success', 'Order placed successfully.');
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): View //Indexes current user order into views/customer/orders/index.blade.php
     {
-        $this->ensureCustomer($request);
+        $this->ensureCustomer($request); // verifies current user is a customer, 403 if not
 
         $orders = $request->user()
             ->orders()
@@ -103,31 +103,31 @@ class CustomerOrderController extends Controller
 
     public function rate(Request $request, Order $order): RedirectResponse
     {
-        $this->ensureCustomer($request);
-        Gate::authorize('rate', $order);
+        $this->ensureCustomer($request); // verifies current user is a customer, 403 if not
+        Gate::authorize('rate', $order); // verifies current user is the owner of the order, 403 if not
 
-        $validated = $request->validateWithBag('customerOrderRating', [
+        $validated = $request->validateWithBag('customerOrderRating', [ //validation with error bag for rating, required, must be an ingteger, between 1 to 5
             'shop_rating' => 'required|integer|between:1,5',
         ]);
 
-        $order->update([
-            'shop_rating' => $validated['shop_rating'],
-            'rated_at' => now(),
+        $order->update([ // updates the shop rating and rated_at timestamp
+            'shop_rating' => $validated['shop_rating'], // updates the shop rating
+            'rated_at' => now(), //timestamp for audit trail
         ]);
 
         return redirect()
-            ->route('customer.orders.show', $order)
-            ->with('success', 'Thanks for rating this shop.');
+            ->route('customer.orders.show', $order) // redirects to the order show page
+            ->with('success', 'Thanks for rating this shop.'); // success message
     }
 
     public function show(Request $request, Order $order): View
     {
-        $this->ensureCustomer($request);
-        Gate::authorize('view', $order);
+        $this->ensureCustomer($request); // verifies current user is a customer, 403 if not
+        Gate::authorize('view', $order); // verifies current user is the owner of the order, 403 if not
 
-        $order->load(['shop', 'shopService.service']);
+        $order->load(['shop', 'shopService.service']); // loads the shop and shop service with the service
 
-        return view('customer.orders.show', [
+        return view('customer.orders.show', [ // loads the order show page
             'order' => $order,
         ]);
     }

@@ -62,6 +62,9 @@ Route::middleware('auth')->group(function () {
 
         Route::patch('owner-registrations/{user}/reject', [PlatformAdminOwnerApprovalController::class, 'reject'])
             ->name('platform-admin.owner-registrations.reject');
+
+        Route::patch('owner-registrations/{user}/revoke', [PlatformAdminOwnerApprovalController::class, 'revoke'])
+            ->name('platform-admin.owner-registrations.revoke');
     });
 
     /*

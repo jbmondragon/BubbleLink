@@ -75,6 +75,34 @@ class PlatformAdminOwnerApprovalController extends Controller
             ->with('success', 'Shop owner registration rejected.');
     }
 
+    public function revoke(Request $request, User $user): RedirectResponse
+    {
+        $this->ensurePlatformAdmin($request);
+        $this->ensureReviewableOwnerRegistration($user);
+        abort_unless($user->owner_registration_status === 'approved', 403, 'Only approved owners can be revoked.');
+
+        DB::transaction(function () use ($request, $user): void {
+            // Record the decision in audit log first (before deleting user)
+            OwnerRegistrationReview::create([
+                'shop_owner_user_id' => $user->id,
+                'platform_admin_user_id' => $request->user()->id,
+                'action' => 'revoked',
+                'previous_status' => 'approved',
+                'new_status' => 'deleted',
+            ]);
+            
+            // Delete the owner's shop
+            $user->shops()->delete();
+            
+            // Delete the owner's user account
+            $user->delete();
+        });
+
+        return redirect()
+            ->route('platform-admin.owner-registrations.index')
+            ->with('success', 'Shop owner and their shop have been removed.');
+    }
+
     private function ensurePlatformAdmin(Request $request): void
     {
         abort_unless($request->user()->is_platform_admin, 403);

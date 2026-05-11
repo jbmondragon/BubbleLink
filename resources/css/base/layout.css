@@ -849,6 +849,17 @@
 		background: rgb(229 229 229);
 	}
 
+	.admin-button--revoke {
+		border-color: rgb(239 68 68);
+		background: rgb(254 226 226);
+		color: rgb(220 38 38);
+	}
+
+	.admin-button--revoke:hover {
+		border-color: rgb(185 28 28);
+		background: rgb(254 202 202);
+	}
+
 	.admin-empty-state {
 		border-radius: 1rem;
 		border: 1px dashed rgb(203 213 225);
@@ -916,6 +927,11 @@
 	.admin-status-badge--rejected {
 		background: rgb(229 231 235);
 		color: rgb(31 41 55);
+	}
+
+	.admin-status-badge--revoked {
+		background: rgb(254 226 226);
+		color: rgb(220 38 38);
 	}
 
 	.profile-page-header {

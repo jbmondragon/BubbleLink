@@ -83,6 +83,7 @@
                                     <th>Status</th>
                                     <th>Reviewed by</th>
                                     <th>Reviewed at</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -97,10 +98,19 @@
                                         </td>
                                         <td>{{ $ownerRegistration->approvedBy?->name ?? 'System' }}</td>
                                         <td>{{ $ownerRegistration->owner_registration_reviewed_at?->format('M d, Y h:i A') ?? 'Not recorded' }}</td>
+                                        <td>
+                                            @if ($ownerRegistration->owner_registration_status === 'approved')
+                                                <form method="POST" action="{{ route('platform-admin.owner-registrations.revoke', $ownerRegistration) }}" data-confirm-submit="This will permanently delete the owner's account and their shop. Are you sure?">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="admin-button admin-button--revoke">Remove Owner</button>
+                                                </form>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center">No reviewed registrations yet.</td>
+                                        <td colspan="6" class="text-center">No reviewed registrations yet.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

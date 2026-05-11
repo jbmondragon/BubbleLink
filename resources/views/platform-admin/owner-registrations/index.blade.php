@@ -103,7 +103,7 @@
                                                 <form method="POST" action="{{ route('platform-admin.owner-registrations.revoke', $ownerRegistration) }}" data-confirm-submit="This will permanently delete the owner's account and their shop. Are you sure?">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <button type="submit" class="admin-button admin-button--revoke">Remove Owner</button>
+                                                    <button type="submit" class="admin-button admin-button--revoke">Revoke</button>
                                                 </form>
                                             @endif
                                         </td>

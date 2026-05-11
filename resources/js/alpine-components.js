@@ -149,6 +149,38 @@ export function registerAlpineComponents(Alpine) {
             }, 2000);
         },
     }));
+
+    // Simple AJAX search form submission
+    Alpine.data('ajaxSearch', () => ({
+        loading: false,
+        query: '',
+
+        async submitSearch(event) {
+            event.preventDefault();
+            this.loading = true;
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const searchParams = new URLSearchParams(formData).toString();
+
+            try {
+                const response = await fetch(`/shops/search?${searchParams}`);
+                const data = await response.json();
+
+                // Replace the table content
+                const tableContainer = document.getElementById('shop-table-container');
+                if (tableContainer) {
+                    tableContainer.innerHTML = data.html;
+                }
+            } catch (error) {
+                console.error('Search failed:', error);
+                // Fallback to traditional form submission
+                form.submit();
+            } finally {
+                this.loading = false;
+            }
+        },
+    }));
 }
 
 export function registerDomHandlers() {

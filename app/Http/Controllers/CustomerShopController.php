@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 /**
  * Implements SID2 and SID3 for customer shop discovery.
@@ -64,6 +65,45 @@ class CustomerShopController extends Controller
             'shop' => $shop,
             'services' => $services,
             'serviceCount' => $services->count(),
+        ]);
+    }
+
+    /**
+     * AJAX search endpoint for shops - returns HTML for table replacement
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $search = trim($request->input('search', ''));
+
+        $shops = Shop::with('shopServices.service')
+            ->when($search, function ($q) use ($search) {
+                $q->where('shop_name', 'like', "%$search%")
+                  ->orWhere('address', 'like', "%$search%")
+                  ->orWhere('description', 'like', "%$search%")
+                  ->orWhereHas('shopServices.service', function ($q) use ($search) {
+                      $q->where('name', 'like', "%$search%");
+                  });
+            })
+            ->orderBy('shop_name')
+            ->get();
+
+        $shopCards = $shops->map(function ($shop) {
+            return [
+                'shop' => $shop,
+                'serviceCount' => $shop->shopServices->count(),
+                'featuredServices' => $shop->shopServices
+                    ->sortBy('service.name')
+                    ->take(3)
+                    ->values(),
+                'startingPrice' => $shop->shopServices->min('price'),
+            ];
+        });
+
+        $html = view('customer.shops._table', compact('shopCards', 'search'))->render();
+
+        return response()->json([
+            'html' => $html,
+            'count' => $shopCards->count(),
         ]);
     }
 }

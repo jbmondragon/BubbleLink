@@ -25,6 +25,7 @@ Route::get('/', [CustomerShopController::class, 'index'])->name('customer.shops.
 
 Route::prefix('shops')->name('customer.shops.')->group(function () {
     Route::get('/', [CustomerShopController::class, 'index'])->name('index');
+    Route::get('search', [CustomerShopController::class, 'search'])->name('search');
     Route::get('{shop}/details', [CustomerShopController::class, 'show'])->name('show');
 });
 

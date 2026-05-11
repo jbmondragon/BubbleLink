@@ -24,7 +24,7 @@ use Illuminate\View\View;
  */
 class OrderController extends Controller
 {
-    public function index(Request $request): View|RedirectResponse
+    public function index(Request $request): View|RedirectResponse //Order Listing and Filterint
     {
         $shops = $this->ownerShops($request)->get();
 
@@ -96,7 +96,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse //Manual order creation 
     {
         $validated = $request->validateWithBag('orderCreate', [
             'customer_name' => 'required|string|max:255',
@@ -159,7 +159,7 @@ class OrderController extends Controller
         return redirect()->route('orders.index')->with('success', 'Order created!');
     }
 
-    public function update(Request $request, Order $order): RedirectResponse
+    public function update(Request $request, Order $order): RedirectResponse //Order updates
     {
         Gate::authorize('update', $order);
 
@@ -181,7 +181,7 @@ class OrderController extends Controller
         return redirect()->route('orders.index')->with('success', 'Order updated!');
     }
 
-    private function applyOrderFilters($query, string $statusFilter, string $paymentStatusFilter, string $fromDate, string $toDate)
+    private function applyOrderFilters($query, string $statusFilter, string $paymentStatusFilter, string $fromDate, string $toDate) //Centralized order filters for database queries
     {
         return $query
             ->when($statusFilter !== '', fn ($builder) => $builder->where('status', $statusFilter))
